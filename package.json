@@ -1,0 +1,43 @@
+{
+  "name": "@supercharge/promise-pool",
+  "description": "Supercharge Promise Pool",
+  "version": "0.0.0",
+  "author": "Marcus Pöhls <marcus@futurestud.io>",
+  "bugs": {
+    "url": "https://github.com/superchargejs/promise-pool/issues"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@hapi/code": "~5.3.1",
+    "@hapi/lab": "~19.1.0",
+    "eslint": "~6.0.1",
+    "eslint-config-standard": "~12.0.0",
+    "eslint-plugin-import": "~2.18.0",
+    "eslint-plugin-node": "~9.1.0",
+    "eslint-plugin-promise": "~4.2.1",
+    "eslint-plugin-standard": "~4.0.0",
+    "sinon": "~7.3.2"
+  },
+  "engines": {
+    "node": ">=8"
+  },
+  "homepage": "https://github.com/superchargejs/promise-pool",
+  "keywords": [
+    "supercharge",
+    "superchargejs",
+    "promise-pool",
+    "async",
+    "promises",
+    "pool"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/superchargejs/promise-pool.git"
+  },
+  "scripts": {
+    "lint": "eslint . --fix",
+    "test": "lab --assert @hapi/code --leaks --coverage --lint --reporter console --output stdout --reporter html --output ./coverage/coverage.html"
+  }
+}
