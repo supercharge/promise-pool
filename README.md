@@ -77,7 +77,7 @@ const pool = new PromisePool().withConcurrency(5)
 ```
 
 
-#### `.for()`
+#### `.for(items)`
 Set the items to be processed in the promise pool. Returns the promise pool instance.
 
 ```js
@@ -87,14 +87,22 @@ const users = [
   { name: 'Christian' }
 ]
 
-const pool = new PromisePool().for(users)
+const pool = new PromisePool().withConcurrency(5).for(users)
 ```
 
 
-#### `async .process(callback)`
+#### `.process(callback)`
 Starts processing the promise pool by iterating over the items and passing each item to the async mapper function. Returns an object containing the results and errors.
 
 ```js
+const users = [
+  { name: 'Marcus' },
+  { name: 'Norman' },
+  { name: 'Christian' }
+]
+
+const pool = new PromisePool().withConcurrency(5).for(users)
+
 const { results, errors } = await pool.process(async (user) => {
   await User.createIfNotExisting(user)
 })
