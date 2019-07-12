@@ -8,7 +8,7 @@
     <h3>Promise Pool</h3>
   </p>
   <p>
-    A Node.js promise pool to control the concurrent processing of async functions.
+    Map-like, concurrent promise processing for Node.js.
   </p>
   <br/>
   <p>
