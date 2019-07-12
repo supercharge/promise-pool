@@ -21,7 +21,7 @@ async function run () {
 
   const pool = new PromisePool()
     .for(timeouts)
-    .withConcurrency(1)
+    .withConcurrency(2)
 
   const { results, errors } = await pool.process(async (timeout) => {
     await new Promise(resolve => setTimeout(resolve, timeout))
