@@ -30,6 +30,8 @@ class PromisePoolExecutor extends EventEmitter {
    * @returns {Promise}
    */
   async process (callback) {
+    this.validateInputs(callback)
+
     for (const item of this.items) {
       if (this.hasReachedConcurrencyLimit()) {
         await this.processingSlot()
@@ -39,6 +41,27 @@ class PromisePoolExecutor extends EventEmitter {
     }
 
     return this.drained()
+  }
+
+  /**
+   * Ensure valid inputs and throw otherwise.
+   *
+   * @param {Function} callback
+   *
+   * @throws
+   */
+  validateInputs (callback) {
+    if (typeof callback !== 'function') {
+      throw new Error('The first parameter for the .process(fn) method must be a function')
+    }
+
+    if (!(typeof this.concurrency === 'number' && this.concurrency >= 1)) {
+      throw new TypeError(`\`concurrency\` must be a number, 1 or up. Received \`${this.concurrency}\` (${typeof concurrency})`)
+    }
+
+    if (!Array.isArray(this.items)) {
+      throw new TypeError(`\`items\` must be an array. Received \`${this.items}\` (${typeof this.items})`)
+    }
   }
 
   /**

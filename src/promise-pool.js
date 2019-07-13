@@ -52,10 +52,6 @@ class PromisePool {
    * @returns {Promise}
    */
   async process (callback) {
-    if (typeof callback !== 'function') {
-      throw new Error('The first parameter for the .process(fn) method must be a function')
-    }
-
     return new PromisePoolExecutor({
       items: this._items,
       concurrency: this._concurrency

@@ -34,6 +34,25 @@ describe('Promise Pool', () => {
     expect(results).to.equal([])
   })
 
+  it('ensures concurrency is a number', async () => {
+    const pool = new PromisePool()
+    const fn = () => {}
+
+    await expect(pool.withConcurrency(1).process(fn)).to.not.reject()
+    await expect(pool.withConcurrency(0).process(fn)).to.reject(TypeError)
+    await expect(pool.withConcurrency(-1).process(fn)).to.reject(TypeError)
+    await expect(pool.withConcurrency(Infinity).process(fn)).to.not.reject()
+    await expect(pool.withConcurrency(null).process(fn)).to.reject(TypeError)
+  })
+
+  it('ensures the items are an array', async () => {
+    const pool = new PromisePool()
+    const fn = () => {}
+
+    await expect(pool.for([]).process(fn)).to.not.reject()
+    await expect(pool.for('non-array').process(fn)).to.reject(TypeError)
+  })
+
   it('throws when missing the callback in .process', async () => {
     const pool = new PromisePool()
     expect(pool.process()).to.reject()
@@ -85,7 +104,7 @@ describe('Promise Pool', () => {
     const ids = [1, 2, 3, 4]
 
     const { results, errors } = await new PromisePool()
-      .withConcurrency()
+      .withConcurrency(2)
       .for(ids)
       .process(id => {
         if (id === 3) throw new Error('Oh no, not a 3.')
