@@ -12,13 +12,12 @@ class PromisePoolExecutor extends EventEmitter {
   constructor ({ concurrency = 10, items = [] } = {}) {
     super()
 
-    this._active = 0
-    this._errors = []
-    this._results = []
-    this._pending = []
-    this._items = items
-    this._concurrency = concurrency
-    this._iterator = this._items[Symbol.iterator]()
+    this.active = 0
+    this.errors = []
+    this.results = []
+    this.pending = []
+    this.items = items
+    this.concurrency = concurrency
   }
 
   /**
@@ -31,15 +30,15 @@ class PromisePoolExecutor extends EventEmitter {
    * @returns {Promise}
    */
   async process (callback) {
-    for (const item of this._items) {
-      if (this._hasReachedConcurrencyLimit()) {
-        await this._processingSlot()
+    for (const item of this.items) {
+      if (this.hasReachedConcurrencyLimit()) {
+        await this.processingSlot()
       }
 
-      this._handle(callback, item)
+      this.handle(callback, item)
     }
 
-    return this._drained()
+    return this.drained()
   }
 
   /**
@@ -49,9 +48,9 @@ class PromisePoolExecutor extends EventEmitter {
    *
    * @returns {Promise}
    */
-  async _processingSlot () {
+  async processingSlot () {
     return new Promise(resolve => {
-      this._pending.push(resolve)
+      this.pending.push(resolve)
     })
   }
 
@@ -62,18 +61,18 @@ class PromisePoolExecutor extends EventEmitter {
    * @param {Function} callback
    * @param {*} item
    */
-  async _handle (callback, item) {
-    this._increaseActive()
+  async handle (callback, item) {
+    this.increaseActive()
 
     try {
-      this._results.push(
+      this.results.push(
         await callback(item)
       )
     } catch (error) {
-      this._errors.push(error)
+      this.errors.push(error)
     }
 
-    this._startNext()
+    this.startNext()
   }
 
   /**
@@ -81,16 +80,16 @@ class PromisePoolExecutor extends EventEmitter {
    * tasks. Once all tasks finished processing,
    * it emits the `pool:finished` event.
    */
-  _startNext () {
-    this._decreaseActive()
+  startNext () {
+    this.decreaseActive()
 
-    if (this._hasPending()) {
-      const resolve = this._pending.shift()
+    if (this.hasPending()) {
+      const resolve = this.pending.shift()
 
       return resolve()
     }
 
-    if (this._allFinished()) {
+    if (this.allFinished()) {
       this.emit('pool:finished')
     }
   }
@@ -102,16 +101,16 @@ class PromisePoolExecutor extends EventEmitter {
    *
    * @returns {Object}
    */
-  async _drained () {
-    if (this._hasActiveTasks()) {
+  async drained () {
+    if (this.hasActive()) {
       await new Promise(resolve => {
         this.once('pool:finished', resolve)
       })
     }
 
     return {
-      errors: this._errors,
-      results: this._results
+      errors: this.errors,
+      results: this.results
     }
   }
 
@@ -121,22 +120,22 @@ class PromisePoolExecutor extends EventEmitter {
    *
    * @returns {Boolean}
    */
-  _hasReachedConcurrencyLimit () {
-    return this._active >= this._concurrency
+  hasReachedConcurrencyLimit () {
+    return this.active >= this.concurrency
   }
 
   /**
    * Increases the number of active tasks by one.
    */
-  _increaseActive () {
-    ++this._active
+  increaseActive () {
+    ++this.active
   }
 
   /**
    * Decreases the number of active tasks by one.
    */
-  _decreaseActive () {
-    --this._active
+  decreaseActive () {
+    --this.active
   }
 
   /**
@@ -145,8 +144,8 @@ class PromisePoolExecutor extends EventEmitter {
    *
    * @returns {Boolean}
    */
-  _allFinished () {
-    return this._hasNoActiveTasks() && this._hasNoPendingTasks()
+  allFinished () {
+    return this.hasNoActiveTasks() && this.hasNoPendingTasks()
   }
 
   /**
@@ -154,8 +153,8 @@ class PromisePoolExecutor extends EventEmitter {
    *
    * @returns {Boolean}
    */
-  _hasActiveTasks () {
-    return this._active > 0
+  hasActive () {
+    return this.active > 0
   }
 
   /**
@@ -163,8 +162,8 @@ class PromisePoolExecutor extends EventEmitter {
    *
    * @returns {Boolean}
    */
-  _hasNoActiveTasks () {
-    return !this._hasActiveTasks()
+  hasNoActiveTasks () {
+    return !this.hasActive()
   }
 
   /**
@@ -172,8 +171,8 @@ class PromisePoolExecutor extends EventEmitter {
    *
    * @returns {Boolean}
    */
-  _hasPending () {
-    return this._pending.length > 0
+  hasPending () {
+    return this.pending.length > 0
   }
 
   /**
@@ -181,8 +180,8 @@ class PromisePoolExecutor extends EventEmitter {
    *
    * @returns {Boolean}
    */
-  _hasNoPendingTasks () {
-    return !this._hasPending()
+  hasNoPendingTasks () {
+    return !this.hasPending()
   }
 }
 
