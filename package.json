@@ -6,9 +6,7 @@
   "bugs": {
     "url": "https://github.com/superchargejs/promise-pool/issues"
   },
-  "dependencies": {
-    "p-defer": "~3.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@hapi/code": "~5.3.1",
     "@hapi/lab": "~19.1.0",
