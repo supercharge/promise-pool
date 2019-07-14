@@ -85,6 +85,28 @@ describe('Promise Pool', () => {
     expect(elapsed > 400 && elapsed < 450).to.be.true()
   })
 
+  it('ensures concurrency', async () => {
+    const start = Date.now()
+    const timeouts = [100, 20, 30, 10, 10, 10, 10]
+
+    const { results, errors } = await new PromisePool()
+      .withConcurrency(2)
+      .for(timeouts)
+      .process(async timeout => {
+        await pause(timeout)
+        return timeout
+      })
+
+    expect(errors).to.equal([])
+    expect(results.length).to.equal(7)
+
+    const elapsed = Date.now() - start
+
+    // expect the first task to take the longest processing time
+    // and expect all other tasks to finish while task 1 is running
+    expect(elapsed > 100 && elapsed < 150).to.be.true()
+  })
+
   it('handles concurrency greater than items in the list', async () => {
     const ids = [1, 2, 3, 4, 5]
 
