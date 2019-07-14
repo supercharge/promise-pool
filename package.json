@@ -6,7 +6,6 @@
   "bugs": {
     "url": "https://github.com/superchargejs/promise-pool/issues"
   },
-  "dependencies": {},
   "devDependencies": {
     "@hapi/code": "~5.3.1",
     "@hapi/lab": "~19.1.0",
@@ -15,8 +14,7 @@
     "eslint-plugin-import": "~2.18.0",
     "eslint-plugin-node": "~9.1.0",
     "eslint-plugin-promise": "~4.2.1",
-    "eslint-plugin-standard": "~4.0.0",
-    "sinon": "~7.3.2"
+    "eslint-plugin-standard": "~4.0.0"
   },
   "engines": {
     "node": ">=8"
@@ -26,8 +24,10 @@
     "supercharge",
     "superchargejs",
     "promise-pool",
+    "nodejs",
     "async",
-    "promise",
+    "map",
+    "async-map",
     "promises"
   ],
   "license": "MIT",
