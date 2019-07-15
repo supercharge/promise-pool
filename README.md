@@ -37,7 +37,7 @@ npm i @supercharge/promise-pool
 
 
 ## Usage
-Using the queue data structure is pretty straightforward. The library exposes a `Queue` class and you need to create a queue instance. You can create a queue from existing data or an empty one:
+Using the promise pool is pretty straightforward. The pacakge exposes a class and you can create a promise pool instance using the fluent interface. Here’s a working example:
 
 ```js
 const PromisePool = require('@supercharge/promise-pool')
