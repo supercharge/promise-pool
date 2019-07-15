@@ -134,7 +134,10 @@ describe('Promise Pool', () => {
         return id
       })
 
-    expect(errors).to.equal([new Error('Oh no, not a 3.')])
+    const error = new Error('Oh no, not a 3.')
+    error.item = 3
+
+    expect(errors).to.equal([error])
     expect(results).to.equal([1, 2, 4])
   })
 })

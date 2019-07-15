@@ -92,6 +92,7 @@ class PromisePoolExecutor extends EventEmitter {
         await callback(item)
       )
     } catch (error) {
+      error.item = item
       this.errors.push(error)
     }
 
