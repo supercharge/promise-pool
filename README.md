@@ -51,8 +51,8 @@ const users = [
 const { results, errors } = await new PromisePool()
   .for(users)
   .withConcurrency(2)
-  .process(async user => {
-    const user = await User.createIfNotExisting(user)
+  .process(async data => {
+    const user = await User.createIfNotExisting(data)
 
     return user
   })
