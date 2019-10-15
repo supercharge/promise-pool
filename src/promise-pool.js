@@ -15,8 +15,7 @@ class PromisePool {
   }
 
   /**
-   * Set the number of tasks to concurrently
-   * when processing the promise pool.
+   * Set the number of tasks to process concurrently the promise pool.
    *
    * @param {Integer} concurrency
    *
@@ -29,8 +28,18 @@ class PromisePool {
   }
 
   /**
-   * Set the items to be processed in
-   * the promise pool.
+   * Set the number of tasks to process concurrently the promise pool.
+   *
+   * @param {Integer} concurrency
+   *
+   * @returns {PromisePool}
+   */
+  static withConcurrency (concurrency) {
+    return new this().withConcurrency(concurrency)
+  }
+
+  /**
+   * Set the items to be processed in the promise pool.
    *
    * @param {Array} items
    *
@@ -40,6 +49,17 @@ class PromisePool {
     this._items = items
 
     return this
+  }
+
+  /**
+   * Set the items to be processed in the promise pool.
+   *
+   * @param {Array} items
+   *
+   * @returns {PromisePool}
+   */
+  static for (items) {
+    return new this().for(items)
   }
 
   /**

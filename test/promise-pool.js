@@ -14,6 +14,19 @@ describe('Promise Pool', () => {
     expect(pool._concurrency).to.equal(10)
   })
 
+  it('supports a static .for method', async () => {
+    const users = [1, 2, 3]
+    const userPool = PromisePool.for(users)
+    expect(userPool._items).to.equal(users)
+    expect(userPool instanceof PromisePool).to.be.true()
+  })
+
+  it('supports a static .withConcurrency method', async () => {
+    const pool = PromisePool.withConcurrency(4)
+    expect(pool._concurrency).to.equal(4)
+    expect(pool instanceof PromisePool).to.be.true()
+  })
+
   it('allows method chaining for the promise pool setup', async () => {
     const users = [1, 2, 3]
     const userPool = new PromisePool().withConcurrency(2).for(users)
