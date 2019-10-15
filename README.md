@@ -21,6 +21,8 @@
   <p>
     <a href="https://travis-ci.com/superchargejs/promise-pool"><img src="https://travis-ci.com/superchargejs/promise-pool.svg?branch=master" alt="Build Status" data-canonical-src="https://travis-ci.com/superchargejs/promise-pool.svg?branch=master" style="max-width:100%;"></a>
     <a href="https://www.npmjs.com/package/@supercharge/promise-pool"><img src="https://img.shields.io/npm/v/@supercharge/promise-pool.svg" alt="Latest Version"></a>
+    <a href="https://www.npmjs.com/package/@supercharge/promise-pool"><img src="https://img.shields.io/npm/dm/@supercharge/promise-pool.svg" alt="Monthly downloads"></a>
+
   </p>
   <p>
     <em>Follow <a href="http://twitter.com/marcuspoehls">@marcuspoehls</a> and <a href="http://twitter.com/superchargejs">@superchargejs</a> for updates!</em>
