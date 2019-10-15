@@ -19,7 +19,7 @@ async function run () {
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(item => item * 100)
   )
 
-  const pool = new PromisePool()
+  const pool = PromisePool
     .for(timeouts)
     .withConcurrency(2)
 

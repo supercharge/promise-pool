@@ -42,7 +42,9 @@ Find all the [details and available methods in the extensive Supercharge docs](h
 
 
 ## Usage
-Using the promise pool is pretty straightforward. The pacakge exposes a class and you can create a promise pool instance using the fluent interface. Here’s a working example:
+Using the promise pool is pretty straightforward. The pacakge exposes a class and you can create a promise pool instance using the fluent interface.
+
+Here’s an example using the default concurrency of 10:
 
 ```js
 const PromisePool = require('@supercharge/promise-pool')
@@ -53,7 +55,27 @@ const users = [
   { name: 'Christian' }
 ]
 
-const { results, errors } = await new PromisePool()
+const { results, errors } = await PromisePool
+  .for(users)
+  .process(async data => {
+    const user = await User.createIfNotExisting(data)
+
+    return user
+  })
+```
+
+You can surely refine the concurrency to your needs using the `.withConcurrency` method:
+
+```js
+const PromisePool = require('@supercharge/promise-pool')
+
+const users = [
+  { name: 'Marcus' },
+  { name: 'Norman' },
+  { name: 'Christian' }
+]
+
+const { results, errors } = await PromisePool
   .for(users)
   .withConcurrency(2)
   .process(async data => {
