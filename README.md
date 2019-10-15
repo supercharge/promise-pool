@@ -67,21 +67,11 @@ const { results, errors } = await PromisePool
 You can surely refine the concurrency to your needs using the `.withConcurrency` method:
 
 ```js
-const PromisePool = require('@supercharge/promise-pool')
-
-const users = [
-  { name: 'Marcus' },
-  { name: 'Norman' },
-  { name: 'Christian' }
-]
-
-const { results, errors } = await PromisePool
+await PromisePool
   .for(users)
   .withConcurrency(2)
   .process(async data => {
-    const user = await User.createIfNotExisting(data)
-
-    return user
+    //
   })
 ```
 
