@@ -9,7 +9,7 @@
   "devDependencies": {
     "@hapi/code": "~7.0.0",
     "@hapi/lab": "~21.0.0",
-    "eslint": "~6.6.0",
+    "eslint": "~6.7.1",
     "eslint-config-standard": "~14.1.0",
     "eslint-plugin-import": "~2.18.2",
     "eslint-plugin-node": "~10.0.0",
