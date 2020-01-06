@@ -7,7 +7,7 @@
     "url": "https://github.com/superchargejs/promise-pool/issues"
   },
   "devDependencies": {
-    "@hapi/code": "~7.0.0",
+    "@hapi/code": "~8.0.1",
     "@hapi/lab": "~21.0.0",
     "eslint": "~6.8.0",
     "eslint-config-standard": "~14.1.0",
