@@ -117,7 +117,8 @@ describe('Promise Pool', () => {
 
     // expect the first task to take the longest processing time
     // and expect all other tasks to finish while task 1 is running
-    expect(elapsed >= 100 && elapsed < 130).to.be.true()
+    expect(elapsed >= 100).to.be.true()
+    expect(elapsed < 140).to.be.true()
   })
 
   it('handles concurrency greater than items in the list', async () => {
