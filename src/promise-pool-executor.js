@@ -4,8 +4,7 @@ const EventEmitter = require('events')
 
 class PromisePoolExecutor extends EventEmitter {
   /**
-   * Instantiates a new promise pool with a default
-   * `concurrency: 10` and `items: []`.
+   * Instantiates a new promise pool with a default `concurrency: 10` and `items: []`.
    *
    * @param {Object} options
    */
@@ -21,9 +20,8 @@ class PromisePoolExecutor extends EventEmitter {
   }
 
   /**
-   * Starts processing the promise pool by iterating
-   * over the items and passing each item to the
-   * async mapper function.
+   * Starts processing the promise pool by iterating over the items
+   * and passing each item to the async `callback` function.
    *
    * @param {Function} callback
    *
@@ -65,9 +63,8 @@ class PromisePoolExecutor extends EventEmitter {
   }
 
   /**
-   * Creates a deferred promise and pushes the related
-   * callback to the pending queue. Returns the
-   * promise which is used to wait for the callback.
+   * Creates a deferred promise and pushes the related callback to the pending
+   * queue. Returns the promise which is used to wait for the callback.
    *
    * @returns {Promise}
    */
@@ -100,9 +97,8 @@ class PromisePoolExecutor extends EventEmitter {
   }
 
   /**
-   * Starts the next task from the list of pending
-   * tasks. Once all tasks finished processing,
-   * it emits the `pool:finished` event.
+   * Starts the next task from the list of pending tasks. Once all tasks
+   * finished processing, it emits the `pool:finished` event.
    */
   startNext () {
     this.decreaseActive()
@@ -119,9 +115,8 @@ class PromisePoolExecutor extends EventEmitter {
   }
 
   /**
-   * Wait for all active tasks to finish. Once all
-   * the tasks finished processing, returns an
-   * object containing the results and errors.
+   * Wait for all active tasks to finish. Once all the tasks finished
+   * processing, returns an object containing the results and errors.
    *
    * @returns {Object}
    */
@@ -139,8 +134,7 @@ class PromisePoolExecutor extends EventEmitter {
   }
 
   /**
-   * Determines whether the number of active tasks
-   * is greater or equal to the concurrency limit.
+   * Determines whether the number of active tasks is greater or equal to the concurrency limit.
    *
    * @returns {Boolean}
    */
@@ -163,13 +157,12 @@ class PromisePoolExecutor extends EventEmitter {
   }
 
   /**
-   * Determines whether there are still pending or
-   * active tasks remaining for processing.
+   * Determines whether there are still pending or active tasks remaining for processing.
    *
    * @returns {Boolean}
    */
   allFinished () {
-    return this.hasNoActiveTasks() && this.hasNoPendingTasks()
+    return this.noActive() && this.noPending()
   }
 
   /**
@@ -186,7 +179,7 @@ class PromisePoolExecutor extends EventEmitter {
    *
    * @returns {Boolean}
    */
-  hasNoActiveTasks () {
+  noActive () {
     return !this.hasActive()
   }
 
@@ -204,7 +197,7 @@ class PromisePoolExecutor extends EventEmitter {
    *
    * @returns {Boolean}
    */
-  hasNoPendingTasks () {
+  noPending () {
     return !this.hasPending()
   }
 }
