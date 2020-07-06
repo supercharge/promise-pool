@@ -140,14 +140,12 @@ export class PromisePoolExecutor extends EventEmitter {
    * @param {*} item
    */
   startProcessing (item: any): void {
-    const task = this.createTaskFor(item)
-
-    const t = task.then(result => {
+    const task = this.createTaskFor(item).then(result => {
       this.results.push(result)
-      this.tasks.splice(this.tasks.indexOf(t), 1)
+      this.tasks.splice(this.tasks.indexOf(task), 1)
     })
 
-    this.tasks.push(t)
+    this.tasks.push(task)
   }
 
   /**
@@ -158,19 +156,15 @@ export class PromisePoolExecutor extends EventEmitter {
    * @returns {*}
    */
   async createTaskFor (item: any): Promise<any> {
-    const wrap = async (): Promise<any> => {
-      try {
-        return await this.itemHandler(item)
-      } catch (error) {
-        if (this.errorHandler) {
-          return this.errorHandler(error, item)
-        }
-
-        throw error
+    try {
+      return await this.itemHandler(item)
+    } catch (error) {
+      if (this.errorHandler) {
+        return this.errorHandler(error, item)
       }
-    }
 
-    return wrap()
+      throw error
+    }
   }
 
   /**
