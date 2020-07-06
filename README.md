@@ -42,7 +42,7 @@ Find all the [details and available methods in the extensive Supercharge docs](h
 
 
 ## Usage
-Using the promise pool is pretty straightforward. The pacakge exposes a class and you can create a promise pool instance using the fluent interface.
+Using the promise pool is pretty straightforward. The package exposes a class and you can create a promise pool instance using the fluent interface.
 
 Here’s an example using the default concurrency of 10:
 
