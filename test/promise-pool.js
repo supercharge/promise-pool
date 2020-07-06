@@ -102,7 +102,7 @@ describe('Promise Pool', () => {
 
   it('ensures concurrency', async () => {
     const start = Date.now()
-    const timeouts = [100, 20, 30, 10, 10, 10, 10]
+    const timeouts = [100, 20, 30, 10, 10, 10, 50]
 
     const results = await PromisePool
       .withConcurrency(2)
@@ -112,14 +112,13 @@ describe('Promise Pool', () => {
         return timeout
       })
 
-    expect(results).to.equal([20, 30, 10, 10, 10, 100, 10])
+    expect(results).to.equal([20, 30, 10, 10, 10, 100, 50])
 
     const elapsed = Date.now() - start
 
     // expect the first task to take the longest processing time
     // and expect all other tasks to finish while task 1 is running
-    expect(elapsed >= 100).to.be.true()
-    expect(elapsed < 140).to.be.true()
+    expect(elapsed).in.range(130, 160)
   })
 
   it('handles concurrency greater than items in the list', async () => {
