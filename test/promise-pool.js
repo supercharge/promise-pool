@@ -9,41 +9,41 @@ const { describe, it } = (exports.lab = Lab.script())
 const pause = timeout => new Promise(resolve => setTimeout(resolve, timeout))
 
 describe('Promise Pool', () => {
-  it('creates a new PromisePool()', async () => {
+  it('creates a new PromisePool', async () => {
     const pool = new PromisePool()
-    expect(pool._concurrency).to.equal(10)
+    expect(pool.concurrency).to.equal(10)
   })
 
   it('supports a static .for method', async () => {
     const users = [1, 2, 3]
     const userPool = PromisePool.for(users)
-    expect(userPool._items).to.equal(users)
+    expect(userPool.items).to.equal(users)
     expect(userPool instanceof PromisePool).to.be.true()
   })
 
   it('supports a static .withConcurrency method', async () => {
     const pool = PromisePool.withConcurrency(4)
-    expect(pool._concurrency).to.equal(4)
+    expect(pool.concurrency).to.equal(4)
     expect(pool instanceof PromisePool).to.be.true()
   })
 
   it('allows method chaining for the promise pool setup', async () => {
     const users = [1, 2, 3]
     const userPool = new PromisePool().withConcurrency(2).for(users)
-    expect(userPool._items).to.equal(users)
-    expect(userPool._concurrency).to.equal(2)
+    expect(userPool.items).to.equal(users)
+    expect(userPool.concurrency).to.equal(2)
     expect(userPool instanceof PromisePool).to.be.true()
 
     const timeouts = [1, 2, 3]
     const timeoutPool = new PromisePool().for(timeouts).withConcurrency(5)
-    expect(timeoutPool._items).to.equal(timeouts)
-    expect(timeoutPool._concurrency).to.equal(5)
+    expect(timeoutPool.items).to.equal(timeouts)
+    expect(timeoutPool.concurrency).to.equal(5)
     expect(timeoutPool instanceof PromisePool).to.be.true()
   })
 
   it('handles empty items', async () => {
     const pool = new PromisePool()
-    const { results } = await pool.process(() => {})
+    const results = await pool.process(() => {})
     expect(results).to.equal([])
   })
 
@@ -73,9 +73,9 @@ describe('Promise Pool', () => {
 
   it('concurrency: 2', async () => {
     const start = Date.now()
-    const timeouts = [100, 200, 300, 100]
+    const timeouts = [400, 100, 200, 300, 100]
 
-    const { results, errors } = await new PromisePool()
+    const results = await PromisePool
       .withConcurrency(2)
       .for(timeouts)
       .process(async timeout => {
@@ -83,26 +83,28 @@ describe('Promise Pool', () => {
         return timeout
       })
 
-    expect(errors).to.equal([])
-    expect(results).to.equal([100, 200, 100, 300])
+    expect(results).to.equal([100, 200, 400, 100, 300])
 
     const elapsed = Date.now() - start
 
     // expect 400ms because 2 tasks run in parallel,
-    //   and task 1 and 2 start, waiting 100ms and 200ms
-    //   and task 1 finishes (after 100ms)
-    //   and the pool starts task 3 waiting 300ms
-    //   and task 2 finishes (after 200ms)
-    //   and the pool starts task 4 waiting 200ms
-    //   and task 2 and 4 probably finish at around 400ms
-    expect(elapsed > 400 && elapsed < 450).to.be.true()
+    //   and task 1 and 2 start, waiting 400ms and 100ms
+    //   and task 2 finishes (after 100ms)
+    //   and the pool starts task 3 waiting 200ms
+    //   and task 3 finishes (after 200ms)
+    //   and the pool starts task 4 waiting 300ms
+    //   and task 1 finishes (after 100ms (400ms in total))
+    //   and the pool starts task 5 waiting 100ms
+    //   and task 5 finishes (after 100ms)
+    //   and task 4 finishes (after 300ms)
+    expect(elapsed).in.range(600, 650)
   })
 
   it('ensures concurrency', async () => {
     const start = Date.now()
     const timeouts = [100, 20, 30, 10, 10, 10, 10]
 
-    const { results, errors } = await new PromisePool()
+    const results = await PromisePool
       .withConcurrency(2)
       .for(timeouts)
       .process(async timeout => {
@@ -110,8 +112,7 @@ describe('Promise Pool', () => {
         return timeout
       })
 
-    expect(errors).to.equal([])
-    expect(results.length).to.equal(7)
+    expect(results).to.equal([20, 30, 10, 10, 10, 100, 10])
 
     const elapsed = Date.now() - start
 
@@ -124,7 +125,7 @@ describe('Promise Pool', () => {
   it('handles concurrency greater than items in the list', async () => {
     const ids = [1, 2, 3, 4, 5]
 
-    const { results, errors } = await new PromisePool()
+    const results = await PromisePool
       .withConcurrency(3000)
       .for(ids)
       .process(async timeout => {
@@ -132,26 +133,46 @@ describe('Promise Pool', () => {
         return timeout
       })
 
-    expect(errors).to.equal([])
     expect(results).to.equal([1, 2, 3, 4, 5])
   })
 
-  it('returns errors', async () => {
+  it('throws - and fails loud', async () => {
     const ids = [1, 2, 3, 4]
 
-    const { results, errors } = await new PromisePool()
+    try {
+      await PromisePool
+        .withConcurrency(2)
+        .for(ids)
+        .process(id => {
+          if (id === 3) throw new Error('Oh no, not a 3.')
+
+          return id
+        })
+
+      expect(false).to.be.true() // should not be reached
+    } catch (error) {
+      const err = new Error('Oh no, not a 3.')
+      expect(error).to.equal(err)
+    }
+  })
+
+  it('onError', async () => {
+    const ids = [1, 2, 3, 4]
+    let hasError = false
+
+    const results = await PromisePool
       .withConcurrency(2)
       .for(ids)
+      .onError((_error, _item) => {
+        hasError = true
+      })
       .process(id => {
         if (id === 3) throw new Error('Oh no, not a 3.')
 
         return id
       })
 
-    const error = new Error('Oh no, not a 3.')
-    error.item = 3
-
-    expect(errors).to.equal([error])
-    expect(results).to.equal([1, 2, 4])
+    expect(results).to.equal([1, 2, undefined, 4])
+    expect(hasError).to.be.true()
   })
 })

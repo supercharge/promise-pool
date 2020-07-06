@@ -6,15 +6,22 @@
   "bugs": {
     "url": "https://github.com/superchargejs/promise-pool/issues"
   },
+  "dependencies": {
+    "@supercharge/goodies": "~1.4.0"
+  },
   "devDependencies": {
     "@hapi/code": "~7.0.0",
     "@hapi/lab": "~21.0.0",
+    "@supercharge/tsconfig": "~1.0.0",
+    "@typescript-eslint/eslint-plugin": "~3.5.0",
     "eslint": "~6.8.0",
-    "eslint-config-standard": "~14.1.0",
+    "eslint-config-standard": "~14.1.1",
+    "eslint-config-standard-with-typescript": "~18.0.2",
     "eslint-plugin-import": "~2.20.0",
     "eslint-plugin-node": "~11.1.0",
     "eslint-plugin-promise": "~4.2.1",
-    "eslint-plugin-standard": "~4.0.1"
+    "eslint-plugin-standard": "~4.0.1",
+    "typescript": "~3.9.6"
   },
   "engines": {
     "node": ">=8"
@@ -31,6 +38,10 @@
     "promises"
   ],
   "license": "MIT",
+  "files": [
+    "dist",
+    "index.js"
+  ],
   "main": "index.js",
   "publishConfig": {
     "access": "public"
@@ -40,8 +51,13 @@
     "url": "git+https://github.com/superchargejs/promise-pool.git"
   },
   "scripts": {
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "test": "lab --assert @hapi/code --leaks --coverage --lint --reporter console --output stdout --reporter html --output ./coverage/coverage.html"
-  }
+    "build": "tsc",
+    "lint": "eslint src --ext .js,.ts",
+    "lint:fix": "eslint src --ext .js,.ts --fix",
+    "test": "npm run build && npm run lint && npm run test:run",
+    "test:list": "lab --assert @hapi/code --dry --verbose",
+    "test:run": "lab --assert @hapi/code --leaks --coverage --reporter console --output stdout --reporter html --output ./coverage/coverage.html",
+    "test:single": "npm run build && lab --assert @hapi/code --leaks --id"
+  },
+  "types": "dist"
 }

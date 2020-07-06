@@ -13,6 +13,7 @@ lib-cov
 pids
 results
 
+dist
 node_modules
 npm-debug.log
 package-lock.json
