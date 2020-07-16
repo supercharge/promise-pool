@@ -52,6 +52,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "dev": "tsc --watch",
     "lint": "eslint src --ext .js,.ts",
     "lint:fix": "eslint src --ext .js,.ts --fix",
     "test": "npm run build && npm run lint && npm run test:run",
