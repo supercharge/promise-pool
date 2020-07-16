@@ -43,7 +43,7 @@ describe('Promise Pool', () => {
 
   it('handles empty items', async () => {
     const pool = new PromisePool()
-    const results = await pool.process(() => {})
+    const { results } = await pool.process(() => {})
     expect(results).to.equal([])
   })
 
@@ -75,7 +75,7 @@ describe('Promise Pool', () => {
     const start = Date.now()
     const timeouts = [400, 100, 200, 300, 100]
 
-    const results = await PromisePool
+    const { results, errors } = await PromisePool
       .withConcurrency(2)
       .for(timeouts)
       .process(async timeout => {
@@ -83,6 +83,7 @@ describe('Promise Pool', () => {
         return timeout
       })
 
+    expect(errors).to.equal([])
     expect(results).to.equal([100, 200, 400, 100, 300])
 
     const elapsed = Date.now() - start
@@ -104,7 +105,7 @@ describe('Promise Pool', () => {
     const start = Date.now()
     const timeouts = [100, 20, 30, 10, 10, 10, 50]
 
-    const results = await PromisePool
+    const { results } = await PromisePool
       .withConcurrency(2)
       .for(timeouts)
       .process(async timeout => {
@@ -124,7 +125,7 @@ describe('Promise Pool', () => {
   it('handles concurrency greater than items in the list', async () => {
     const ids = [1, 2, 3, 4, 5]
 
-    const results = await PromisePool
+    const { results } = await PromisePool
       .withConcurrency(3000)
       .for(ids)
       .process(async timeout => {
@@ -135,43 +136,43 @@ describe('Promise Pool', () => {
     expect(results).to.equal([1, 2, 3, 4, 5])
   })
 
-  it('throws - and fails loud', async () => {
+  it('returns errors', async () => {
     const ids = [1, 2, 3, 4]
 
-    try {
-      await PromisePool
-        .withConcurrency(2)
-        .for(ids)
-        .process(id => {
-          if (id === 3) throw new Error('Oh no, not a 3.')
-
-          return id
-        })
-
-      expect(false).to.be.true() // should not be reached
-    } catch (error) {
-      const err = new Error('Oh no, not a 3.')
-      expect(error).to.equal(err)
-    }
-  })
-
-  it('onError', async () => {
-    const ids = [1, 2, 3, 4]
-    let hasError = false
-
-    const results = await PromisePool
+    const { results, errors } = await PromisePool
       .withConcurrency(2)
       .for(ids)
-      .onError((_error, _item) => {
-        hasError = true
-      })
       .process(id => {
         if (id === 3) throw new Error('Oh no, not a 3.')
 
         return id
       })
 
-    expect(results).to.equal([1, 2, undefined, 4])
-    expect(hasError).to.be.true()
+    expect(results).to.equal([1, 2, 4])
+
+    expect(errors.length).to.equal(1)
+    expect(errors[0].item).to.equal(3)
+    expect(errors[0]).to.be.instanceOf(Error)
+    expect(errors[0].message).to.equal('Oh no, not a 3.')
   })
+
+  // it('throws - and fails loud', async () => {
+  //   const ids = [1, 2, 3, 4]
+
+  //   try {
+  //     await PromisePool
+  //       .withConcurrency(2)
+  //       .for(ids)
+  //       .process(id => {
+  //         if (id === 3) throw new Error('Oh no, not a 3.')
+
+  //         return id
+  //       })
+
+  //     expect(false).to.be.true() // should not be reached
+  //   } catch (error) {
+  //     const err = new Error('Oh no, not a 3.')
+  //     expect(error).to.equal(err)
+  //   }
+  // })
 })
