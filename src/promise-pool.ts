@@ -1,56 +1,54 @@
 'use strict'
 
 import { tap } from '@supercharge/goodies'
-import { PromisePoolExecutor } from './promise-pool-executor'
+import { PromisePoolExecutor, ReturnValue } from './promise-pool-executor'
 
-export class PromisePool {
+export class PromisePool<T> {
   /**
    * The processable items.
    */
-  private items: any[]
+  private items: T[]
 
   /**
    * The number of promises running concurrently.
    */
   private concurrency: number
-
-  /**
-   * The number of promises running concurrently.
-   */
-  private errorHandler: Function | undefined
+  private static concurrency: number
 
   /**
    * Instantiates a new promise pool with a default `concurrency: 10` and `items: []`.
    *
    * @param {Object} options
    */
-  constructor ({ concurrency = 10, items = [] } = {}) {
-    this.items = items
-    this.concurrency = concurrency
+  constructor () {
+    this.items = []
+    this.concurrency = 10
   }
 
   /**
-   * Set the number of tasks to process concurrently the promise pool.
+   * Set the number of tasks to process concurrently in the promise pool.
    *
    * @param {Integer} concurrency
    *
    * @returns {PromisePool}
    */
-  withConcurrency (concurrency: number): this {
+  withConcurrency (concurrency: number): PromisePool<T> {
     return tap(this, () => {
       this.concurrency = concurrency
     })
   }
 
   /**
-   * Set the number of promises to process concurrently in the promise pool.
+   * Set the number of tasks to process concurrently in the promise pool.
    *
    * @param {Number} concurrency
    *
    * @returns {PromisePool}
    */
-  static withConcurrency (concurrency: number): PromisePool {
-    return new this().withConcurrency(concurrency)
+  static withConcurrency (concurrency: number): typeof PromisePool {
+    return tap(this, () => {
+      this.concurrency = concurrency
+    })
   }
 
   /**
@@ -60,7 +58,7 @@ export class PromisePool {
    *
    * @returns {PromisePool}
    */
-  for (items: any[]): this {
+  for (items: T[]): PromisePool<T> {
     return tap(this, () => {
       this.items = items
     })
@@ -73,36 +71,24 @@ export class PromisePool {
    *
    * @returns {PromisePool}
    */
-  static for (items: any[]): PromisePool {
-    return new this().for(items)
-  }
-
-  /**
-   * Set an error handler that will be called when an error occurs while processing the items.
-   *
-   * @param {Function} handler
-   *
-   * @returns {PromisePool}
-   */
-  onError (handler: Function): this {
-    return tap(this, () => {
-      this.errorHandler = handler
-    })
+  static for<T> (items: T[]): PromisePool<T> {
+    return new this<T>()
+      .for(items)
+      .withConcurrency(this.concurrency)
   }
 
   /**
    * Starts processing the promise pool by iterating over the items
    * and running each item through the async `callback` function.
    *
-   * @param {Function} callback
+   * @param {Function} The async processing function receiving each item from the `items` array.
    *
-   * @returns {Promise}
+   * @returns Promise<{ results, errors }>
    */
-  async process (callback: Function): Promise<any[]> {
-    return new PromisePoolExecutor()
+  async process (callback: (item: T) => any): Promise<ReturnValue> {
+    return new PromisePoolExecutor<T>()
       .withConcurrency(this.concurrency)
       .withHandler(callback)
-      .onError(this.errorHandler)
       .for(this.items)
       .start()
   }

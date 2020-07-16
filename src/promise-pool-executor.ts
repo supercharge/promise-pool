@@ -1,20 +1,52 @@
 'use strict'
 
-import { EventEmitter } from 'events'
 import { tap, upon } from '@supercharge/goodies'
+import { PromisePoolError } from './promise-pool-error'
 
-export class PromisePoolExecutor extends EventEmitter {
-  private readonly tasks: any[]
+export interface ReturnValue {
+  /**
+   * The list of processed items.
+   */
+  results: any[]
 
+  /**
+   * The list of errors that occurred while processing all items in the pool.
+   * Each error contains the error-causing item at `error.item` as a
+   * reference for re-processing.
+   */
+  errors: Array<PromisePoolError<any>>
+}
+
+export class PromisePoolExecutor<T> {
+  /**
+   * The list of items to process.
+   */
   private items: any[]
 
+  /**
+   * The number of concurrently running tasks.
+   */
   private concurrency: number
 
-  private itemHandler: Function
+  /**
+   * The intermediate list of currently running tasks.
+   */
+  private readonly tasks: any[]
 
-  private errorHandler: Function | undefined
-
+  /**
+   * The list of results.
+   */
   private readonly results: any[]
+
+  /**
+   * The async processing function receiving each item from the `items` array.
+   */
+  private handler: (item: T) => any
+
+  /**
+   * The list of errors.
+   */
+  private readonly errors: Array<PromisePoolError<T>>
 
   /**
    * Instantiates a new promise pool with a default `concurrency: 10` and `items: []`.
@@ -22,14 +54,12 @@ export class PromisePoolExecutor extends EventEmitter {
    * @param {Object} options
    */
   constructor () {
-    super()
-
     this.tasks = []
-    this.results = []
     this.items = []
+    this.errors = []
+    this.results = []
     this.concurrency = 10
-
-    this.itemHandler = () => {}
+    this.handler = () => {}
   }
 
   /**
@@ -65,22 +95,9 @@ export class PromisePoolExecutor extends EventEmitter {
    *
    * @returns {PromisePoolExecutor}
    */
-  withHandler (handler: Function): this {
+  withHandler (handler: (item: T) => any): this {
     return tap(this, () => {
-      this.itemHandler = handler
-    })
-  }
-
-  /**
-   * Set an error handler that will be called when an error occurs while processing the items.
-   *
-   * @param {Function} handler
-   *
-   * @returns {PromisePool}
-   */
-  onError (handler?: Function): this {
-    return tap(this, () => {
-      this.errorHandler = handler
+      this.handler = handler
     })
   }
 
@@ -89,7 +106,7 @@ export class PromisePoolExecutor extends EventEmitter {
    *
    * @returns {Array}
    */
-  async start (): Promise<any[]> {
+  async start (): Promise<ReturnValue> {
     return upon(this.validateInputs(), async () => {
       return this.process()
     })
@@ -101,7 +118,7 @@ export class PromisePoolExecutor extends EventEmitter {
    * @throws
    */
   validateInputs (): void {
-    if (typeof this.itemHandler !== 'function') {
+    if (typeof this.handler !== 'function') {
       throw new Error('The first parameter for the .process(fn) method must be a function')
     }
 
@@ -122,7 +139,7 @@ export class PromisePoolExecutor extends EventEmitter {
    *
    * @returns {Promise}
    */
-  async process (): Promise<any[]> {
+  async process (): Promise<ReturnValue> {
     for (const item of this.items) {
       if (this.hasReachedConcurrencyLimit()) {
         await this.processingSlot()
@@ -139,11 +156,17 @@ export class PromisePoolExecutor extends EventEmitter {
    *
    * @param {*} item
    */
-  startProcessing (item: any): void {
-    const task = this.createTaskFor(item).then(result => {
-      this.results.push(result)
-      this.tasks.splice(this.tasks.indexOf(task), 1)
-    })
+  startProcessing (item: T): void {
+    const task = this.createTaskFor(item)
+      .then(result => {
+        this.results.push(result)
+        this.tasks.splice(this.tasks.indexOf(task), 1)
+      })
+      .catch(error => {
+        this.errors.push(
+          new PromisePoolError(error.message, item)
+        )
+      })
 
     this.tasks.push(task)
   }
@@ -155,16 +178,8 @@ export class PromisePoolExecutor extends EventEmitter {
    *
    * @returns {*}
    */
-  async createTaskFor (item: any): Promise<any> {
-    try {
-      return await this.itemHandler(item)
-    } catch (error) {
-      if (this.errorHandler) {
-        return this.errorHandler(error, item)
-      }
-
-      throw error
-    }
+  async createTaskFor (item: T): Promise<any> {
+    return this.handler(item)
   }
 
   /**
@@ -191,10 +206,13 @@ export class PromisePoolExecutor extends EventEmitter {
    *
    * @returns {Object}
    */
-  async drained (): Promise<any[]> {
+  async drained (): Promise<ReturnValue> {
     await this.drainActiveTasks()
 
-    return Promise.all(this.results)
+    return {
+      results: await Promise.all(this.results),
+      errors: this.errors
+    }
   }
 
   /**
