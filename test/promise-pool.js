@@ -1,6 +1,6 @@
 'use strict'
 
-const PromisePool = require('..')
+const PromisePool = require('../dist')
 
 const pause = timeout => new Promise(resolve => setTimeout(resolve, timeout))
 

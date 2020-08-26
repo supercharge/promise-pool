@@ -40,10 +40,9 @@
   ],
   "license": "MIT",
   "files": [
-    "dist",
-    "index.js"
+    "dist"
   ],
-  "main": "index.js",
+  "main": "dist",
   "publishConfig": {
     "access": "public"
   },
