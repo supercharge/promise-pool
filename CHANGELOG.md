@@ -1,5 +1,15 @@
 # Changelog
 
+
+## [1.4.0](https://github.com/supercharge/streams/compare/v1.3.0...v1.4.0) - 2020-08-xx
+
+### Updated
+- bump dependencies
+- change `main` entrypoint in `package.json` to `dist` folder
+- move test runner from `@hapi/lab` to `jest`
+- move assertions from `@hapi/code` to `jest`
+
+
 ## [1.3.0](https://github.com/superchargejs/promise-pool/compare/v1.2.0...v1.3.0) - 2020-07-16
 
 ### Added
