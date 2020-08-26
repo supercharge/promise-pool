@@ -1,7 +1,8 @@
 {
   "env": {
     "es6": true,
-    "node": true
+    "node": true,
+    "jest": true
   },
   "extends": [
     "standard-with-typescript"
@@ -12,7 +13,6 @@
   "rules": {
     "@typescript-eslint/return-await": 0,
     "@typescript-eslint/require-await": 0,
-    // "@typescript-eslint/no-floating-promises": 0,
     "@typescript-eslint/strict-boolean-expressions": 0
   }
 }

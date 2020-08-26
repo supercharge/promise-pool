@@ -1,74 +1,70 @@
 'use strict'
 
-const Lab = require('@hapi/lab')
 const PromisePool = require('..')
-const { expect } = require('@hapi/code')
-
-const { describe, it } = (exports.lab = Lab.script())
 
 const pause = timeout => new Promise(resolve => setTimeout(resolve, timeout))
 
 describe('Promise Pool', () => {
   it('creates a new PromisePool', async () => {
     const pool = new PromisePool()
-    expect(pool.concurrency).to.equal(10)
+    expect(pool.concurrency).toEqual(10)
   })
 
   it('supports a static .for method', async () => {
     const users = [1, 2, 3]
     const userPool = PromisePool.for(users)
-    expect(userPool.items).to.equal(users)
-    expect(userPool instanceof PromisePool).to.be.true()
+    expect(userPool.items).toEqual(users)
+    expect(userPool instanceof PromisePool).toBe(true)
   })
 
   it('supports a static .withConcurrency method', async () => {
     const pool = PromisePool.withConcurrency(4)
-    expect(pool.concurrency).to.equal(4)
-    expect(pool instanceof PromisePool).to.be.false() // pool is not an instance yet
+    expect(pool.concurrency).toEqual(4)
+    expect(pool instanceof PromisePool).toBe(false) // pool is not an instance yet
   })
 
   it('allows method chaining for the promise pool setup', async () => {
     const users = [1, 2, 3]
     const userPool = new PromisePool().withConcurrency(2).for(users)
-    expect(userPool.items).to.equal(users)
-    expect(userPool.concurrency).to.equal(2)
-    expect(userPool instanceof PromisePool).to.be.true()
+    expect(userPool.items).toEqual(users)
+    expect(userPool.concurrency).toEqual(2)
+    expect(userPool).toBeInstanceOf(PromisePool)
 
     const timeouts = [1, 2, 3]
     const timeoutPool = new PromisePool().for(timeouts).withConcurrency(5)
-    expect(timeoutPool.items).to.equal(timeouts)
-    expect(timeoutPool.concurrency).to.equal(5)
-    expect(timeoutPool instanceof PromisePool).to.be.true()
+    expect(timeoutPool.items).toEqual(timeouts)
+    expect(timeoutPool.concurrency).toEqual(5)
+    expect(timeoutPool).toBeInstanceOf(PromisePool)
   })
 
   it('handles empty items', async () => {
     const pool = new PromisePool()
     const { results } = await pool.process(() => {})
-    expect(results).to.equal([])
+    expect(results).toEqual([])
   })
 
   it('ensures concurrency is a number', async () => {
     const pool = new PromisePool()
     const fn = () => {}
 
-    await expect(pool.withConcurrency(1).process(fn)).to.not.reject()
-    await expect(pool.withConcurrency(0).process(fn)).to.reject(TypeError)
-    await expect(pool.withConcurrency(-1).process(fn)).to.reject(TypeError)
-    await expect(pool.withConcurrency(Infinity).process(fn)).to.not.reject()
-    await expect(pool.withConcurrency(null).process(fn)).to.reject(TypeError)
+    await expect(pool.withConcurrency(1).process(fn)).not.toReject()
+    await expect(pool.withConcurrency(0).process(fn)).toReject(TypeError)
+    await expect(pool.withConcurrency(-1).process(fn)).toReject(TypeError)
+    await expect(pool.withConcurrency(Infinity).process(fn)).not.toReject()
+    await expect(pool.withConcurrency(null).process(fn)).toReject(TypeError)
   })
 
   it('ensures the items are an array', async () => {
     const pool = new PromisePool()
     const fn = () => {}
 
-    await expect(pool.for([]).process(fn)).to.not.reject()
-    await expect(pool.for('non-array').process(fn)).to.reject(TypeError)
+    await expect(pool.for([]).process(fn)).not.toReject()
+    await expect(pool.for('non-array').process(fn)).toReject(TypeError)
   })
 
   it('throws when missing the callback in .process', async () => {
     const pool = new PromisePool()
-    expect(pool.process()).to.reject()
+    expect(pool.process()).toReject()
   })
 
   it('concurrency: 2', async () => {
@@ -83,8 +79,8 @@ describe('Promise Pool', () => {
         return timeout
       })
 
-    expect(errors).to.equal([])
-    expect(results).to.equal([100, 200, 400, 100, 300])
+    expect(errors).toEqual([])
+    expect(results).toEqual([100, 200, 400, 100, 300])
 
     const elapsed = Date.now() - start
 
@@ -98,7 +94,7 @@ describe('Promise Pool', () => {
     //   and the pool starts task 5 waiting 100ms
     //   and task 5 finishes (after 100ms)
     //   and task 4 finishes (after 300ms)
-    expect(elapsed).in.range(600, 650)
+    expect(elapsed).toBeWithin(600, 650)
   })
 
   it('ensures concurrency', async () => {
@@ -113,13 +109,13 @@ describe('Promise Pool', () => {
         return timeout
       })
 
-    expect(results).to.equal([20, 30, 10, 10, 10, 100, 50])
+    expect(results).toEqual([20, 30, 10, 10, 10, 100, 50])
 
     const elapsed = Date.now() - start
 
     // expect the first task to take the longest processing time
     // and expect all other tasks to finish while task 1 is running
-    expect(elapsed).in.range(130, 160)
+    expect(elapsed).toBeWithin(130, 160)
   })
 
   it('handles concurrency greater than items in the list', async () => {
@@ -133,7 +129,7 @@ describe('Promise Pool', () => {
         return timeout
       })
 
-    expect(results).to.equal([1, 2, 3, 4, 5])
+    expect(results).toEqual([1, 2, 3, 4, 5])
   })
 
   it('returns errors', async () => {
@@ -148,12 +144,12 @@ describe('Promise Pool', () => {
         return id
       })
 
-    expect(results).to.equal([1, 2, 4])
+    expect(results).toEqual([1, 2, 4])
 
-    expect(errors.length).to.equal(1)
-    expect(errors[0].item).to.equal(3)
-    expect(errors[0]).to.be.instanceOf(Error)
-    expect(errors[0].message).to.equal('Oh no, not a 3.')
+    expect(errors.length).toEqual(1)
+    expect(errors[0].item).toEqual(3)
+    expect(errors[0]).toBeInstanceOf(Error)
+    expect(errors[0].message).toEqual('Oh no, not a 3.')
   })
 
   // it('throws - and fails loud', async () => {
@@ -169,10 +165,8 @@ describe('Promise Pool', () => {
   //         return id
   //       })
 
-  //     expect(false).to.be.true() // should not be reached
-  //   } catch (error) {
-  //     const err = new Error('Oh no, not a 3.')
-  //     expect(error).to.equal(err)
-  //   }
-  // })
+//     expect(false).toBe(true) // should not be reached
+//   } catch (error) {
+//     const err = new Error('Oh no, not a 3.')
+//     expect(error).toEqual(err)
 })
