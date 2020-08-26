@@ -1,6 +1,6 @@
 'use strict'
 
-const PromisePool = require('..')
+const PromisePool = require('../dist')
 
 /**
  * Very basic, non-optimal shuffle function
@@ -19,16 +19,15 @@ async function run () {
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(item => item * 100)
   )
 
-  const pool = PromisePool
+  const { results, errors } = await PromisePool
     .for(timeouts)
     .withConcurrency(2)
+    .process(async (timeout) => {
+      await new Promise(resolve => setTimeout(resolve, timeout))
+      console.log(`waited ${timeout}ms`)
 
-  const { results, errors } = await pool.process(async (timeout) => {
-    await new Promise(resolve => setTimeout(resolve, timeout))
-    console.log(`waited ${timeout}ms`)
-
-    return timeout
-  })
+      return timeout
+    })
 
   console.log('Results ->')
   console.log(results)
