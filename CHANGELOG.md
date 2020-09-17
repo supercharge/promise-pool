@@ -4,6 +4,7 @@
 ## [1.4.0](https://github.com/supercharge/streams/compare/v1.3.0...v1.4.0) - 2020-09-17
 
 ### Added
+- improved types supporting typed return values
 - improved error handling when rejecting a promise without an error instance (thank you [wzh](https://github.com/supercharge/promise-pool/pull/19))
 
 ### Updated
