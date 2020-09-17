@@ -170,7 +170,7 @@ describe('Promise Pool', () => {
   //     const err = new Error('Oh no, not a 3.')
   //     expect(error).toEqual(err)
 
-  it('promise reject with nothing', async () => {
+  it('fails without error', async () => {
     const ids = [1, 2, 3, 4, 5]
 
     const { errors } = await PromisePool
@@ -184,5 +184,46 @@ describe('Promise Pool', () => {
 
     expect(errors.length).toEqual(ids.length)
     expect(errors).toSatisfyAll(error => error.message === '')
+  })
+
+  it('fails with string', async () => {
+    const ids = [1, 2, 3]
+
+    const { errors } = await PromisePool
+      .withConcurrency(2)
+      .for(ids)
+      .process(async () => {
+        // eslint-disable-next-line prefer-promise-reject-errors
+        return Promise.reject('failed')
+      })
+
+    expect(errors).toSatisfyAll(error => error.message === 'failed')
+  })
+
+  it('fails with Error and stacktrace', async () => {
+    const ids = [1, 2, 3]
+
+    const { errors } = await PromisePool
+      .withConcurrency(2)
+      .for(ids)
+      .process(async () => {
+        throw new Error('failing')
+      })
+
+    expect(errors).toSatisfyAll(error => error.message === 'failing')
+  })
+
+  it('fails with object', async () => {
+    const ids = [1, 2, 3]
+
+    const { errors } = await PromisePool
+      .withConcurrency(2)
+      .for(ids)
+      .process(async () => {
+        // eslint-disable-next-line prefer-promise-reject-errors
+        return Promise.reject({ message: 'failed' })
+      })
+
+    expect(errors).toSatisfyAll(error => error.message === 'failed')
   })
 })
