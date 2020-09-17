@@ -3,25 +3,25 @@
 import { tap, upon } from '@supercharge/goodies'
 import { PromisePoolError } from './promise-pool-error'
 
-export interface ReturnValue {
+export interface ReturnValue<T, R> {
   /**
    * The list of processed items.
    */
-  results: any[]
+  results: R[]
 
   /**
    * The list of errors that occurred while processing all items in the pool.
    * Each error contains the error-causing item at `error.item` as a
    * reference for re-processing.
    */
-  errors: Array<PromisePoolError<any>>
+  errors: Array<PromisePoolError<T>>
 }
 
-export class PromisePoolExecutor<T> {
+export class PromisePoolExecutor<T, R> {
   /**
    * The list of items to process.
    */
-  private items: any[]
+  private items: T[]
 
   /**
    * The number of concurrently running tasks.
@@ -36,7 +36,7 @@ export class PromisePoolExecutor<T> {
   /**
    * The list of results.
    */
-  private readonly results: any[]
+  private readonly results: R[]
 
   /**
    * The async processing function receiving each item from the `items` array.
@@ -106,7 +106,7 @@ export class PromisePoolExecutor<T> {
    *
    * @returns {Array}
    */
-  async start (): Promise<ReturnValue> {
+  async start (): Promise<ReturnValue<T, R>> {
     return upon(this.validateInputs(), async () => {
       return this.process()
     })
@@ -139,7 +139,7 @@ export class PromisePoolExecutor<T> {
    *
    * @returns {Promise}
    */
-  async process (): Promise<ReturnValue> {
+  async process (): Promise<ReturnValue<T, R>> {
     for (const item of this.items) {
       if (this.hasReachedConcurrencyLimit()) {
         await this.processingSlot()
@@ -164,7 +164,7 @@ export class PromisePoolExecutor<T> {
       })
       .catch(error => {
         this.errors.push(
-          new PromisePoolError(this.getErrorMsg(error), item)
+          new PromisePoolError(error, item)
         )
       })
 
@@ -206,7 +206,7 @@ export class PromisePoolExecutor<T> {
    *
    * @returns {Object}
    */
-  async drained (): Promise<ReturnValue> {
+  async drained (): Promise<ReturnValue<T, R>> {
     await this.drainActiveTasks()
 
     return {
