@@ -164,7 +164,7 @@ export class PromisePoolExecutor<T> {
       })
       .catch(error => {
         this.errors.push(
-          new PromisePoolError(error.message, item)
+          new PromisePoolError(this.getErrorMsg(error), item)
         )
       })
 
@@ -231,5 +231,22 @@ export class PromisePoolExecutor<T> {
    */
   activeCount (): number {
     return this.tasks.length
+  }
+
+  /**
+   * Returns the message of error
+   *
+   * @returns {String}
+   */
+  private getErrorMsg (error: any): string {
+    if (error instanceof Error) {
+      return error.message
+    }
+
+    if (typeof error === 'string' || typeof error === 'number') {
+      return error.toString()
+    }
+
+    return ''
   }
 }

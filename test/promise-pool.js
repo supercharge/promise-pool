@@ -165,8 +165,24 @@ describe('Promise Pool', () => {
   //         return id
   //       })
 
-//     expect(false).toBe(true) // should not be reached
-//   } catch (error) {
-//     const err = new Error('Oh no, not a 3.')
-//     expect(error).toEqual(err)
+  //     expect(false).toBe(true) // should not be reached
+  //   } catch (error) {
+  //     const err = new Error('Oh no, not a 3.')
+  //     expect(error).toEqual(err)
+
+  it('promise reject with nothing', async () => {
+    const ids = [1, 2, 3, 4, 5]
+
+    const { errors } = await PromisePool
+      .withConcurrency(2)
+      .for(ids)
+      .process(async id => {
+        await new Promise((resolve, reject) => setTimeout(reject, 10))
+
+        return id
+      })
+
+    expect(errors.length).toEqual(ids.length)
+    expect(errors).toSatisfyAll(error => error.message === '')
+  })
 })
