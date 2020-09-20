@@ -1,7 +1,8 @@
 'use strict'
 
 import { tap } from '@supercharge/goodies'
-import { PromisePoolExecutor, ReturnValue } from './promise-pool-executor'
+import { ReturnValue } from './return-value'
+import { PromisePoolExecutor } from './promise-pool-executor'
 
 export class PromisePool<T> {
   /**
@@ -85,6 +86,7 @@ export class PromisePool<T> {
    *
    * @returns Promise<{ results, errors }>
    */
+  async process<R> (callback: (item: T) => Promise<R>): Promise<ReturnValue<T, R>>
   async process<R> (callback: (item: T) => R): Promise<ReturnValue<T, R>> {
     return new PromisePoolExecutor<T, R>()
       .withConcurrency(this.concurrency)
