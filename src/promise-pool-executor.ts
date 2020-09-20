@@ -1,21 +1,8 @@
 'use strict'
 
+import { ReturnValue } from './return-value'
 import { tap, upon } from '@supercharge/goodies'
 import { PromisePoolError } from './promise-pool-error'
-
-export interface ReturnValue<T, R> {
-  /**
-   * The list of processed items.
-   */
-  results: R[]
-
-  /**
-   * The list of errors that occurred while processing all items in the pool.
-   * Each error contains the error-causing item at `error.item` as a
-   * reference for re-processing.
-   */
-  errors: Array<PromisePoolError<T>>
-}
 
 export class PromisePoolExecutor<T, R> {
   /**
@@ -49,9 +36,7 @@ export class PromisePoolExecutor<T, R> {
   private readonly errors: Array<PromisePoolError<T>>
 
   /**
-   * Instantiates a new promise pool with a default `concurrency: 10` and `items: []`.
-   *
-   * @param {Object} options
+   * Creates a new promise pool executer instance with a default concurrency of 10.
    */
   constructor () {
     this.tasks = []
@@ -82,7 +67,7 @@ export class PromisePoolExecutor<T, R> {
    *
    * @returns {PromisePoolExecutor}
    */
-  for (items: any[]): this {
+  for (items: T[]): this {
     return tap(this, () => {
       this.items = items
     })
@@ -91,14 +76,32 @@ export class PromisePoolExecutor<T, R> {
   /**
    * Set the handler that is applied to each item.
    *
-   * @param {Function} handler
+   * @param {Function} action
    *
    * @returns {PromisePoolExecutor}
    */
-  withHandler (handler: (item: T) => any): this {
+  withHandler (action: (item: T) => R): this {
     return tap(this, () => {
-      this.handler = handler
+      this.handler = action
     })
+  }
+
+  /**
+   * Determines whether the number of active tasks is greater or equal to the concurrency limit.
+   *
+   * @returns {Boolean}
+   */
+  hasReachedConcurrencyLimit (): boolean {
+    return this.activeCount() >= this.concurrency
+  }
+
+  /**
+   * Returns the number of active tasks.
+   *
+   * @returns {Number}
+   */
+  activeCount (): number {
+    return this.tasks.length
   }
 
   /**
@@ -152,6 +155,23 @@ export class PromisePoolExecutor<T, R> {
   }
 
   /**
+   * Creates a deferred promise and pushes the related callback to the pending
+   * queue. Returns the promise which is used to wait for the callback.
+   *
+   * @returns {Promise}
+   */
+  async processingSlot (): Promise<void> {
+    return this.waitForTaskToFinish()
+  }
+
+  /**
+   * Wait for one of the active tasks to finish processing.
+   */
+  async waitForTaskToFinish (): Promise<void> {
+    await Promise.race(this.tasks)
+  }
+
+  /**
    * Create a processing function for the given `item`.
    *
    * @param {*} item
@@ -183,24 +203,6 @@ export class PromisePoolExecutor<T, R> {
   }
 
   /**
-   * Creates a deferred promise and pushes the related callback to the pending
-   * queue. Returns the promise which is used to wait for the callback.
-   *
-   * @returns {Promise}
-   */
-  async processingSlot (): Promise<void> {
-    return this.waitForTaskToFinish()
-  }
-
-  async waitForTaskToFinish (): Promise<void> {
-    await Promise.race(this.tasks)
-  }
-
-  async drainActiveTasks (): Promise<void> {
-    await Promise.all(this.tasks)
-  }
-
-  /**
    * Wait for all active tasks to finish. Once all the tasks finished
    * processing, returns an object containing the results and errors.
    *
@@ -210,26 +212,15 @@ export class PromisePoolExecutor<T, R> {
     await this.drainActiveTasks()
 
     return {
-      results: await Promise.all(this.results),
+      results: this.results,
       errors: this.errors
     }
   }
 
   /**
-   * Determines whether the number of active tasks is greater or equal to the concurrency limit.
-   *
-   * @returns {Boolean}
+   * Wait for all of the active tasks to finish processing.
    */
-  hasReachedConcurrencyLimit (): boolean {
-    return this.activeCount() >= this.concurrency
-  }
-
-  /**
-   * Returns the number of active tasks.
-   *
-   * @returns {Number}
-   */
-  activeCount (): number {
-    return this.tasks.length
+  async drainActiveTasks (): Promise<void> {
+    await Promise.all(this.tasks)
   }
 }
