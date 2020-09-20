@@ -4,6 +4,7 @@
 ## [1.5.0](https://github.com/supercharge/streams/compare/v1.4.0...v1.5.0) - 2020-09-20
 
 ### Updated
+- bump dependencies
 - return types for `results` and `errors` now resolve properly for sync and async action handlers
 
 
