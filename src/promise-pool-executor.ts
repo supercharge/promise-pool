@@ -80,7 +80,7 @@ export class PromisePoolExecutor<T, R> {
    *
    * @returns {PromisePoolExecutor}
    */
-  withHandler (action: (item: T) => R): this {
+  withHandler (action: (item: T) => R | Promise<R>): this {
     return tap(this, () => {
       this.handler = action
     })
