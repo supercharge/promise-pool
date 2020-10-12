@@ -3,6 +3,7 @@
 const PromisePool = require('../dist')
 
 const pause = timeout => new Promise(resolve => setTimeout(resolve, timeout))
+jest.spyOn(global.console, 'log');
 
 describe('Promise Pool', () => {
   it('creates a new PromisePool', async () => {
@@ -151,6 +152,65 @@ describe('Promise Pool', () => {
     expect(errors[0]).toBeInstanceOf(Error)
     expect(errors[0].message).toEqual('Oh no, not a 3.')
   })
+
+  it('should handle error and continue processing', async () => {
+    const ids = [1, 2, 3, 4]
+    const errorsState = [];
+
+    const { results, errors } = await PromisePool
+      .withConcurrency(2)
+      .for(ids)
+      .onError((_, item) => {
+        errorsState.push(item);
+      })
+      .process(id => {
+        if (id === 3) throw new Error('Oh no, not a 3.')
+
+        return id
+      })
+
+    expect(results).toEqual([1, 2, 4])
+    expect(errors).toEqual([])
+    expect(errorsState).toEqual([3])
+  });
+
+  it('should allow custom processing on a specific error', async () => {
+    const ids = [1, 2, 3, 4]
+
+    const { results, errors } = await PromisePool
+      .withConcurrency(2)
+      .for(ids)
+      .onError((error, _) => {
+        if (error instanceof RangeError) {
+          console.log('RangeError')
+        }
+      })
+      .process(id => {
+        if (id === 4) throw new RangeError('Oh no, too large')
+
+        return id
+      })
+
+    expect(results).toEqual([1, 2, 3])
+    expect(errors).toEqual([])
+    expect(console.log).toBeCalledWith('RangeError')
+  });
+
+  it('rethrowing an error from the error handler should stop promise pool immediately', async () => {
+    const ids = [1, 2, 3, 4]
+
+    await expect(PromisePool
+      .withConcurrency(2)
+      .for(ids)
+      .onError((error, _) => {
+        throw error
+      })
+      .process(id => {
+        if (id === 4) throw new RangeError('Oh no, too large')
+
+        return id
+      })).rejects.toThrowError(RangeError)
+  });
 
   // it('throws - and fails loud', async () => {
   //   const ids = [1, 2, 3, 4]

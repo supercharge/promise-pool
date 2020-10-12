@@ -15,6 +15,10 @@ export class PromisePool<T> {
    */
   private concurrency: number
   private static concurrency: number
+  /**
+   * The error handler callback function
+   */
+  private errorHandler?: (error: Error, item: T) => void | Promise<void>
 
   /**
    * Instantiates a new promise pool with a default `concurrency: 10` and `items: []`.
@@ -24,6 +28,7 @@ export class PromisePool<T> {
   constructor () {
     this.items = []
     this.concurrency = 10
+    this.errorHandler = undefined
   }
 
   /**
@@ -79,6 +84,19 @@ export class PromisePool<T> {
   }
 
   /**
+   * Set the error handler callback to be executed when an error occurs.
+   *
+   * @param {Function} errorHandler
+   *
+   * @returns {PromisePool}
+   */
+  onError (errorHandler: (error: Error, item: T) => Promise<void> | void): PromisePool<T> {
+    return tap(this, () => {
+      this.errorHandler = errorHandler
+    })
+  }
+
+  /**
    * Starts processing the promise pool by iterating over the items
    * and running each item through the async `callback` function.
    *
@@ -90,6 +108,7 @@ export class PromisePool<T> {
     return new PromisePoolExecutor<T, R>()
       .withConcurrency(this.concurrency)
       .withHandler(callback)
+      .onError(this.errorHandler)
       .for(this.items)
       .start()
   }
