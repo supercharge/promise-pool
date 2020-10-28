@@ -153,6 +153,14 @@ describe('Promise Pool', () => {
     expect(errors[0].message).toEqual('Oh no, not a 3.')
   })
 
+  it('fails when not passing a function for the error handler', async () => {
+    const pool = await PromisePool
+      .for([1, 2, 3])
+      .handleError('non-function')
+
+    expect(pool.process(() => {})).toReject()
+  })
+
   it('should handle error and continue processing', async () => {
     const ids = [1, 2, 3, 4]
     const collectedItemsOnError = []

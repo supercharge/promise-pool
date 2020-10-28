@@ -151,6 +151,12 @@ export class PromisePoolExecutor<T, R> {
     if (!Array.isArray(this.items)) {
       throw new TypeError(`"items" must be an array. Received ${typeof this.items}`)
     }
+
+    if (this.errorHandler) {
+      if (typeof this.errorHandler !== 'function') {
+        throw new Error(`The error handler must be a function. Received ${typeof this.errorHandler}`)
+      }
+    }
   }
 
   /**
