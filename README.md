@@ -74,6 +74,25 @@ await PromisePool
   })
 ```
 
+The promise pool allows for custom error handling:
+
+```js
+await PromisePool
+  .for(users)
+  .onError(async (error, user) => {
+    if (error instanceof ThrottleError) { // Execute error handling on specific errors
+      await retryUser(user)
+
+      return
+    }
+
+    throw error // Uncaught errors will immediately stop PromisePool
+  })
+  .process(async data => {
+    // processes 10 items in parallel by default
+  })
+```
+
 
 ## Contributing
 

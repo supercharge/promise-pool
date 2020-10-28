@@ -30,6 +30,8 @@ export class PromisePoolExecutor<T, R> {
    */
   private handler: (item: T) => any
 
+  private errorHandler?: (error: Error, item: T) => void | Promise<void>
+
   /**
    * The list of errors.
    */
@@ -45,6 +47,7 @@ export class PromisePoolExecutor<T, R> {
     this.results = []
     this.concurrency = 10
     this.handler = () => {}
+    this.errorHandler = undefined
   }
 
   /**
@@ -83,6 +86,19 @@ export class PromisePoolExecutor<T, R> {
   withHandler (action: (item: T) => R | Promise<R>): this {
     return tap(this, () => {
       this.handler = action
+    })
+  }
+
+  /**
+   * Set the error handler callback to be executed when an error occurs.
+   *
+   * @param {Function} handler
+   *
+   * @returns {PromisePoolExecutor}
+   */
+  onError (handler?: (error: Error, item: T) => Promise<void> | void): this {
+    return tap(this, () => {
+      this.errorHandler = handler
     })
   }
 
@@ -183,6 +199,9 @@ export class PromisePoolExecutor<T, R> {
         this.tasks.splice(this.tasks.indexOf(task), 1)
       })
       .catch(error => {
+        if (this.errorHandler) {
+          return this.errorHandler(error, item)
+        }
         this.errors.push(
           PromisePoolError.createFrom(error, item)
         )
