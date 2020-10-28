@@ -30,6 +30,9 @@ export class PromisePoolExecutor<T, R> {
    */
   private handler: (item: T) => any
 
+  /**
+   * The async error handling function.
+   */
   private errorHandler?: (error: Error, item: T) => void | Promise<void>
 
   /**
@@ -90,13 +93,13 @@ export class PromisePoolExecutor<T, R> {
   }
 
   /**
-   * Set the error handler callback to be executed when an error occurs.
+   * Set the error handler function to execute when an error occurs.
    *
    * @param {Function} handler
    *
    * @returns {PromisePoolExecutor}
    */
-  onError (handler?: (error: Error, item: T) => Promise<void> | void): this {
+  handleError (handler?: (error: Error, item: T) => Promise<void> | void): this {
     return tap(this, () => {
       this.errorHandler = handler
     })

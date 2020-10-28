@@ -84,15 +84,15 @@ export class PromisePool<T> {
   }
 
   /**
-   * Set the error handler callback to be executed when an error occurs.
+   * Set the error handler function to execute when an error occurs.
    *
-   * @param {Function} errorHandler
+   * @param {Function} handler
    *
    * @returns {PromisePool}
    */
-  onError (errorHandler: (error: Error, item: T) => Promise<void> | void): PromisePool<T> {
+  handleError (handler: (error: Error, item: T) => Promise<void> | void): PromisePool<T> {
     return tap(this, () => {
-      this.errorHandler = errorHandler
+      this.errorHandler = handler
     })
   }
 
@@ -108,7 +108,7 @@ export class PromisePool<T> {
     return new PromisePoolExecutor<T, R>()
       .withConcurrency(this.concurrency)
       .withHandler(callback)
-      .onError(this.errorHandler)
+      .handleError(this.errorHandler)
       .for(this.items)
       .start()
   }

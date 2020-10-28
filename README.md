@@ -79,7 +79,7 @@ The promise pool allows for custom error handling:
 ```js
 await PromisePool
   .for(users)
-  .onError(async (error, user) => {
+  .handleError(async (error, user) => {
     if (error instanceof ThrottleError) { // Execute error handling on specific errors
       await retryUser(user)
 

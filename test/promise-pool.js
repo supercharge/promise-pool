@@ -3,7 +3,7 @@
 const PromisePool = require('../dist')
 
 const pause = timeout => new Promise(resolve => setTimeout(resolve, timeout))
-jest.spyOn(global.console, 'log');
+jest.spyOn(global.console, 'log').mockImplementation()
 
 describe('Promise Pool', () => {
   it('creates a new PromisePool', async () => {
@@ -155,13 +155,13 @@ describe('Promise Pool', () => {
 
   it('should handle error and continue processing', async () => {
     const ids = [1, 2, 3, 4]
-    const errorsState = [];
+    const collectedItemsOnError = []
 
     const { results, errors } = await PromisePool
       .withConcurrency(2)
       .for(ids)
-      .onError((_, item) => {
-        errorsState.push(item);
+      .handleError((_, item) => {
+        collectedItemsOnError.push(item)
       })
       .process(id => {
         if (id === 3) throw new Error('Oh no, not a 3.')
@@ -169,10 +169,10 @@ describe('Promise Pool', () => {
         return id
       })
 
-    expect(results).toEqual([1, 2, 4])
     expect(errors).toEqual([])
-    expect(errorsState).toEqual([3])
-  });
+    expect(results).toEqual([1, 2, 4])
+    expect(collectedItemsOnError).toEqual([3])
+  })
 
   it('should allow custom processing on a specific error', async () => {
     const ids = [1, 2, 3, 4]
@@ -180,7 +180,7 @@ describe('Promise Pool', () => {
     const { results, errors } = await PromisePool
       .withConcurrency(2)
       .for(ids)
-      .onError((error, _) => {
+      .handleError(error => {
         if (error instanceof RangeError) {
           console.log('RangeError')
         }
@@ -191,10 +191,10 @@ describe('Promise Pool', () => {
         return id
       })
 
-    expect(results).toEqual([1, 2, 3])
     expect(errors).toEqual([])
+    expect(results).toEqual([1, 2, 3])
     expect(console.log).toBeCalledWith('RangeError')
-  });
+  })
 
   it('rethrowing an error from the error handler should stop promise pool immediately', async () => {
     const ids = [1, 2, 3, 4]
@@ -202,7 +202,7 @@ describe('Promise Pool', () => {
     await expect(PromisePool
       .withConcurrency(2)
       .for(ids)
-      .onError((error, _) => {
+      .handleError(error => {
         throw error
       })
       .process(id => {
@@ -210,25 +210,7 @@ describe('Promise Pool', () => {
 
         return id
       })).rejects.toThrowError(RangeError)
-  });
-
-  // it('throws - and fails loud', async () => {
-  //   const ids = [1, 2, 3, 4]
-
-  //   try {
-  //     await PromisePool
-  //       .withConcurrency(2)
-  //       .for(ids)
-  //       .process(id => {
-  //         if (id === 3) throw new Error('Oh no, not a 3.')
-
-  //         return id
-  //       })
-
-  //     expect(false).toBe(true) // should not be reached
-  //   } catch (error) {
-  //     const err = new Error('Oh no, not a 3.')
-  //     expect(error).toEqual(err)
+  })
 
   it('fails without error', async () => {
     const ids = [1, 2, 3, 4, 5]
