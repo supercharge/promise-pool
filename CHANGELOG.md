@@ -1,6 +1,18 @@
 # Changelog
 
 
+## [1.6.0](https://github.com/supercharge/streams/compare/v1.5.0...v1.6.0) - 2020-11-03
+
+### Added
+- `.handleError(handler)` method: aka “bring your own error handling”. This allows you to take over error handling from the pool. If you impelement the `.handleError` method, the pool won’t collect errors anymore. It puts error handling in your hands.
+
+### Updated
+- bump dependencies
+
+### Fixed
+- failed tasks are handled properly now and the pool ensures the concurrency limit. Before, the pool started to process all items as soon as one failed
+
+
 ## [1.5.0](https://github.com/supercharge/streams/compare/v1.4.0...v1.5.0) - 2020-09-20
 
 ### Updated
