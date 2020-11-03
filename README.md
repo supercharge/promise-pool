@@ -106,7 +106,7 @@ try {
       // the greater you’ll feel when you achieve it
     })
 
-  await handleCollected(errors)
+  await handleCollected(errors) // this may throw
 
   return { results }
 } catch (error) {
