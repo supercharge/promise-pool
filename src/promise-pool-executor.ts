@@ -208,9 +208,12 @@ export class PromisePoolExecutor<T, R> {
         this.tasks.splice(this.tasks.indexOf(task), 1)
       })
       .catch(error => {
+        this.tasks.splice(this.tasks.indexOf(task), 1)
+
         if (this.errorHandler) {
           return this.errorHandler(error, item)
         }
+
         this.errors.push(
           PromisePoolError.createFrom(error, item)
         )
