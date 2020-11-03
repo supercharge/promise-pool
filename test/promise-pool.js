@@ -153,6 +153,38 @@ describe('Promise Pool', () => {
     expect(errors[0].message).toEqual('Oh no, not a 3.')
   })
 
+  it('keeps processing with when errors occur', async () => {
+    const ids = Array.from({ length: 10 }, (_, i) => i + 1)
+
+    const start = Date.now()
+
+    const { results, errors } = await PromisePool
+      .withConcurrency(2)
+      .for(ids)
+      .process(async id => {
+        await pause(20)
+
+        if (id === 1) {
+          throw new Error('I can’t keep the first item')
+        }
+
+        return id
+      })
+
+    expect(results).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10])
+
+    expect(errors.length).toEqual(1)
+    expect(errors).toSatisfyAll(error => error.message === 'I can’t keep the first item')
+
+    const elapsed = Date.now() - start
+
+    // 10 tasks are in the pool
+    // expect 20ms for 2 parally running tasks
+    // results in 5 batches each batch taking about 20ms
+    // takes around 100ms for all items to process
+    expect(elapsed).toBeWithin(100, 200)
+  })
+
   it('fails when not passing a function for the error handler', async () => {
     const pool = await PromisePool
       .for([1, 2, 3])
@@ -188,7 +220,7 @@ describe('Promise Pool', () => {
     const { results, errors } = await PromisePool
       .withConcurrency(2)
       .for(ids)
-      .handleError(error => {
+      .handleError(async error => {
         if (error instanceof RangeError) {
           console.log('RangeError')
         }
