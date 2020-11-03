@@ -77,7 +77,9 @@ await PromisePool
 ### Bring Your Own Error Handling
 The promise pool allows for custom error handling. You can take over the error handling by implementing an error handler using the `.handleError(handler)`.
 
-If you provide an error handler, the promise pool doesn’t collect any errors. You must then collect errors yourself. Providing a custom error handler allows you to exit the promise pool early by throwing inside the error handler function. Throwing errors is in line with Node.js error handling using async/await.
+> If you provide an error handler, the promise pool doesn’t collect any errors. You must then collect errors yourself.
+
+Providing a custom error handler allows you to exit the promise pool early by throwing inside the error handler function. Throwing errors is in line with Node.js error handling using async/await.
 
 ```js
 try {
