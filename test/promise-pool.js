@@ -308,4 +308,22 @@ describe('Promise Pool', () => {
 
     expect(errors).toSatisfyAll(error => error.message === 'failed')
   })
+
+  it('stop the pool', async () => {
+    const timeouts = [10, 20, 30, 40, 50]
+
+    const { results } = await PromisePool
+      .withConcurrency(2)
+      .for(timeouts)
+      .process(async (timeout, pool) => {
+        if (timeout > 30) {
+          return pool.stop()
+        }
+
+        await pause(timeout)
+        return timeout
+      })
+
+    expect(results).toEqual([10, 20, 30])
+  })
 })
