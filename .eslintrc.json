@@ -13,6 +13,7 @@
   "rules": {
     "@typescript-eslint/return-await": 0,
     "@typescript-eslint/require-await": 0,
+    "@typescript-eslint/method-signature-style": 0,
     "@typescript-eslint/strict-boolean-expressions": 0
   }
 }
