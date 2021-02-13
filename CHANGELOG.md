@@ -1,6 +1,15 @@
 # Changelog
 
 
+## [1.7.0](https://github.com/supercharge/streams/compare/v1.6.0...v1.7.0) - 2021-02-xx
+
+### Added
+- `pool.stop()` method
+
+### Updated
+- bump dependencies
+
+
 ## [1.6.0](https://github.com/supercharge/streams/compare/v1.5.0...v1.6.0) - 2020-11-03
 
 ### Added
