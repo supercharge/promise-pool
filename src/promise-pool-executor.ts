@@ -1,10 +1,11 @@
 'use strict'
 
+import { Stoppable } from './stoppable'
+import { tap } from '@supercharge/goodies'
 import { ReturnValue } from './return-value'
-import { tap, upon } from '@supercharge/goodies'
 import { PromisePoolError } from './promise-pool-error'
 
-export class PromisePoolExecutor<T, R> {
+export class PromisePoolExecutor<T, R> implements Stoppable {
   /**
    * The list of items to process.
    */
@@ -43,7 +44,7 @@ export class PromisePoolExecutor<T, R> {
   /**
    * The async processing function receiving each item from the `items` array.
    */
-  private handler: (item: T) => any
+  private handler: (item: T, pool: Stoppable) => any
 
   /**
    * The async error handling function.
@@ -74,6 +75,10 @@ export class PromisePoolExecutor<T, R> {
    * @returns {PromisePoolExecutor}
    */
   withConcurrency (concurrency: number): this {
+    if (!(typeof concurrency === 'number' && concurrency >= 1)) {
+      throw new TypeError(`"concurrency" must be a number, 1 or up. Received "${concurrency}" (${typeof this.concurrency})`)
+    }
+
     return tap(this, () => {
       this.meta.concurrency = concurrency
     })
@@ -96,8 +101,12 @@ export class PromisePoolExecutor<T, R> {
    * @returns {PromisePoolExecutor}
    */
   for (items: T[]): this {
+    if (!Array.isArray(items)) {
+      throw new TypeError(`"items" must be an array. Received ${typeof items}`)
+    }
+
     return tap(this, () => {
-      this.meta.items = items
+      this.meta.items = ([] as T[]).concat(items)
     })
   }
 
@@ -144,7 +153,11 @@ export class PromisePoolExecutor<T, R> {
    *
    * @returns {PromisePoolExecutor}
    */
-  withHandler (action: (item: T) => R | Promise<R>): this {
+  withHandler (action: (item: T, pool: Stoppable) => R | Promise<R>): this {
+    if (typeof action !== 'function') {
+      throw new Error('The first parameter for the .process(fn) method must be a function')
+    }
+
     return tap(this, () => {
       this.handler = action
     })
@@ -153,13 +166,21 @@ export class PromisePoolExecutor<T, R> {
   /**
    * Set the error handler function to execute when an error occurs.
    *
-   * @param {Function} handler
+   * @param {Function} errorHandler
    *
    * @returns {PromisePoolExecutor}
    */
-  handleError (handler?: (error: Error, item: T) => Promise<void> | void): this {
+  handleError (errorHandler?: (error: Error, item: T) => Promise<void> | void): this {
+    if (!errorHandler) {
+      return this
+    }
+
+    if (typeof errorHandler !== 'function') {
+      throw new Error(`The error handler must be a function. Received ${typeof errorHandler}`)
+    }
+
     return tap(this, () => {
-      this.errorHandler = handler
+      this.errorHandler = errorHandler
     })
   }
 
@@ -182,6 +203,24 @@ export class PromisePoolExecutor<T, R> {
   }
 
   /**
+   * Stop a promise pool processing.
+   */
+  stop (): this {
+    return this.markAsStopped()
+  }
+
+  /**
+   * Mark the promise pool as stopped.
+   *
+   * @returns {PromisePoolExecutor}
+   */
+  markAsStopped (): this {
+    return tap(this, () => {
+      this.meta.stopped = true
+    })
+  }
+
+  /**
    * Determine whether the pool should stop processing.
    *
    * @returns {Boolean}
@@ -196,41 +235,7 @@ export class PromisePoolExecutor<T, R> {
    * @returns {ReturnValue}
    */
   async start (): Promise<ReturnValue<T, R>> {
-    return upon(this.validateInputs(), async () => {
-      return this.process()
-    })
-  }
-
-  /**
-   * Stop a promise pool processing.
-   */
-  async stop (): Promise<void> {
-    //
-  }
-
-  /**
-   * Ensure valid inputs and throw otherwise.
-   *
-   * @throws
-   */
-  validateInputs (): void {
-    if (typeof this.handler !== 'function') {
-      throw new Error('The first parameter for the .process(fn) method must be a function')
-    }
-
-    if (!(typeof this.concurrency() === 'number' && this.concurrency() >= 1)) {
-      throw new TypeError(`"concurrency" must be a number, 1 or up. Received "${this.concurrency()}" (${typeof this.concurrency})`)
-    }
-
-    if (!Array.isArray(this.items())) {
-      throw new TypeError(`"items" must be an array. Received ${typeof this.items()}`)
-    }
-
-    if (this.errorHandler) {
-      if (typeof this.errorHandler !== 'function') {
-        throw new Error(`The error handler must be a function. Received ${typeof this.errorHandler}`)
-      }
-    }
+    return await this.process()
   }
 
   /**
@@ -243,6 +248,10 @@ export class PromisePoolExecutor<T, R> {
    */
   async process (): Promise<ReturnValue<T, R>> {
     for (const item of this.items()) {
+      if (this.stopped()) {
+        break
+      }
+
       if (this.hasReachedConcurrencyLimit()) {
         await this.waitForTaskToFinish()
       }
@@ -250,7 +259,7 @@ export class PromisePoolExecutor<T, R> {
       this.startProcessing(item)
     }
 
-    return this.drained()
+    return await this.drained()
   }
 
   /**
@@ -270,8 +279,9 @@ export class PromisePoolExecutor<T, R> {
   startProcessing (item: T): void {
     const task = this.createTaskFor(item)
       .then(result => {
-        this.results().push(result)
-        this.removeActive(task)
+        this
+          .save(result)
+          .removeActive(task)
       })
       .catch(error => {
         this.removeActive(task)
@@ -296,7 +306,22 @@ export class PromisePoolExecutor<T, R> {
    * @returns {*}
    */
   async createTaskFor (item: T): Promise<any> {
-    return this.handler(item)
+    return this.handler(item, this)
+  }
+
+  /**
+   * Save the given calculation `result`.
+   *
+   * @param {*} result
+   *
+   * @returns {PromisePoolExecutor}
+   */
+  save (result: any): this {
+    if (result !== this) {
+      this.results().push(result)
+    }
+
+    return this
   }
 
   /**
