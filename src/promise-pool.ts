@@ -15,6 +15,7 @@ export class PromisePool<T> {
    */
   private concurrency: number
   private static concurrency: number
+
   /**
    * The error handler callback function
    */
