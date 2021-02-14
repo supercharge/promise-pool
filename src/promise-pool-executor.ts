@@ -4,6 +4,9 @@ import { Stoppable } from './stoppable'
 import { tap } from '@supercharge/goodies'
 import { ReturnValue } from './return-value'
 import { PromisePoolError } from './promise-pool-error'
+import { StopThePromisePoolError } from './stop-the-promise-pool-error'
+
+type ErrorHandler<T> = (error: Error, item: T, pool: Stoppable) => void | Promise<void>
 
 export class PromisePoolExecutor<T, R> implements Stoppable {
   /**
@@ -49,7 +52,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
   /**
    * The async error handling function.
    */
-  private errorHandler?: (error: Error, item: T) => void | Promise<void>
+  private errorHandler?: ErrorHandler<T>
 
   /**
    * Creates a new promise pool executer instance with a default concurrency of 10.
@@ -170,7 +173,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
    *
    * @returns {PromisePoolExecutor}
    */
-  handleError (errorHandler?: (error: Error, item: T) => Promise<void> | void): this {
+  handleError (errorHandler?: ErrorHandler<T>): this {
     if (!errorHandler) {
       return this
     }
@@ -205,8 +208,10 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
   /**
    * Stop a promise pool processing.
    */
-  stop (): this {
-    return this.markAsStopped()
+  stop (): void {
+    this.markAsStopped()
+
+    throw new StopThePromisePoolError()
   }
 
   /**
@@ -221,7 +226,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
   }
 
   /**
-   * Determine whether the pool should stop processing.
+   * Determine whether the pool should stop.
    *
    * @returns {Boolean}
    */
@@ -277,22 +282,16 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
    * @param {*} item
    */
   startProcessing (item: T): void {
-    const task = this.createTaskFor(item)
+    const task: Promise<void> = this.createTaskFor(item)
       .then(result => {
         this
-          .save(result)
           .removeActive(task)
+          .save(result)
       })
       .catch(error => {
-        this.removeActive(task)
-
-        if (this.errorHandler) {
-          return this.errorHandler(error, item)
-        }
-
-        this.errors().push(
-          PromisePoolError.createFrom(error, item)
-        )
+        return this
+          .removeActive(task)
+          .handleErrorFor(error, item)
       })
 
     this.tasks().push(task)
@@ -317,11 +316,9 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
    * @returns {PromisePoolExecutor}
    */
   save (result: any): this {
-    if (result !== this) {
+    return tap(this, () => {
       this.results().push(result)
-    }
-
-    return this
+    })
   }
 
   /**
@@ -329,9 +326,68 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
    *
    * @param {Promise} task
    */
-  removeActive (task: Promise<void>): void {
+  removeActive (task: Promise<void>): this {
     this.tasks().splice(
       this.tasks().indexOf(task), 1
+    )
+
+    return this
+  }
+
+  /**
+   * Create and save an error for the the given `item`.
+   *
+   * @param {T} item
+   */
+  handleErrorFor (error: Error, item: T): void | Promise<void> {
+    if (error instanceof StopThePromisePoolError) {
+      return
+    }
+
+    return this.errorHandler
+      ? this.runErrorHandlerFor(error, item)
+      : this.saveErrorFor(error, item)
+  }
+
+  /**
+   * Run the user’s error handler, if available.
+   *
+   * @param {Error} processingError
+   * @param {T} item
+   */
+  runErrorHandlerFor (processingError: Error, item: T): void | Promise<void> {
+    if (!this.errorHandler) {
+      return
+    }
+
+    try {
+      return this.errorHandler(processingError, item, this)
+    } catch (error) {
+      this.rethrowIfNotStoppingThePool(error)
+    }
+  }
+
+  /**
+   * Rethrow the given `error` if it’s not an instance of `StopThePromisePoolError`.
+   *
+   * @param {Error} error
+   */
+  rethrowIfNotStoppingThePool (error: Error): void {
+    if (error instanceof StopThePromisePoolError) {
+      return
+    }
+
+    throw error
+  }
+
+  /**
+   * Create and save an error for the the given `item`.
+   *
+   * @param {T} item
+   */
+  saveErrorFor (error: Error, item: T): void {
+    this.errors().push(
+      PromisePoolError.createFrom(error, item)
     )
   }
 
