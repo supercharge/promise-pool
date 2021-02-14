@@ -20,7 +20,7 @@ export class PromisePool<T> {
   /**
    * The error handler callback function
    */
-  private errorHandler?: (error: Error, item: T) => void | Promise<void>
+  private errorHandler?: (error: Error, item: T, pool: Stoppable) => void | Promise<void>
 
   /**
    * Instantiates a new promise pool with a default `concurrency: 10` and `items: []`.
@@ -92,7 +92,7 @@ export class PromisePool<T> {
    *
    * @returns {PromisePool}
    */
-  handleError (handler: (error: Error, item: T) => Promise<void> | void): PromisePool<T> {
+  handleError (handler: (error: Error, item: T, pool: Stoppable) => void | Promise<void>): PromisePool<T> {
     return tap(this, () => {
       this.errorHandler = handler
     })
