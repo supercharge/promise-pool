@@ -309,21 +309,61 @@ describe('Promise Pool', () => {
     expect(errors).toSatisfyAll(error => error.message === 'failed')
   })
 
-  it('stop the pool', async () => {
-    const timeouts = [10, 20, 30, 40, 50]
+  describe('stop the pool', () => {
+    it('stops the pool from .process', async () => {
+      const timeouts = [10, 20, 30, 40, 50]
 
-    const { results } = await PromisePool
-      .withConcurrency(2)
-      .for(timeouts)
-      .process(async (timeout, pool) => {
-        if (timeout > 30) {
+      const { results } = await PromisePool
+        .withConcurrency(2)
+        .for(timeouts)
+        .process(async (timeout, pool) => {
+          if (timeout > 30) {
+            return pool.stop()
+          }
+
+          await pause(timeout)
+          return timeout
+        })
+
+      expect(results).toEqual([10, 20, 30])
+    })
+
+    it('stops the pool from .process without returning pool.stop', async () => {
+      const timeouts = [10, 20, 30, 40, 50]
+
+      const { results } = await PromisePool
+        .for(timeouts)
+        .process(async (timeout, pool) => {
+          if (timeout === 30) {
+            pool.stop()
+          }
+
+          await pause(timeout)
+          return timeout
+        })
+
+      expect(results).toEqual([10, 20])
+    })
+
+    it('stops the pool from .handleError', async () => {
+      const timeouts = [10, 20, 30, 40, 50]
+
+      const { results } = await PromisePool
+        .withConcurrency(2)
+        .for(timeouts)
+        .handleError((_, __, pool) => {
           return pool.stop()
-        }
+        })
+        .process(async (timeout) => {
+          if (timeout > 30) {
+            throw new Error('stop the pool')
+          }
 
-        await pause(timeout)
-        return timeout
-      })
+          await pause(timeout)
+          return timeout
+        })
 
-    expect(results).toEqual([10, 20, 30])
+      expect(results).toEqual([10, 20, 30])
+    })
   })
 })
