@@ -345,7 +345,7 @@ describe('Promise Pool', () => {
       expect(results).toEqual([10, 20])
     })
 
-    it('stops the pool from .handleError', async () => {
+    it('stops the pool from sync .handleError', async () => {
       const timeouts = [10, 20, 30, 40, 50]
 
       const { results } = await PromisePool
@@ -364,6 +364,26 @@ describe('Promise Pool', () => {
         })
 
       expect(results).toEqual([10, 20, 30])
+    })
+
+    it('stops the pool from async error handler', async () => {
+      const timeouts = [10, 20, 30, 40, 50]
+
+      const { results } = await PromisePool
+        .for(timeouts)
+        .handleError(async (_, __, pool) => {
+          pool.stop()
+        })
+        .process(async (timeout) => {
+          if (timeout < 30) {
+            throw new Error('stop the pool')
+          }
+
+          await pause(timeout)
+          return timeout
+        })
+
+      expect(results).toEqual([30])
     })
   })
 })

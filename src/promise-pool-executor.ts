@@ -288,7 +288,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
           .removeActive(task)
           .save(result)
       })
-      .catch(error => {
+      .catch(async error => {
         return this
           .removeActive(task)
           .handleErrorFor(error, item)
@@ -339,14 +339,25 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
    *
    * @param {T} item
    */
-  handleErrorFor (error: Error, item: T): void | Promise<void> {
-    if (error instanceof StopThePromisePoolError) {
+  async handleErrorFor (error: Error, item: T): Promise<void> {
+    if (this.isStoppingThePool(error)) {
       return
     }
 
     return this.errorHandler
-      ? this.runErrorHandlerFor(error, item)
+      ? await this.runErrorHandlerFor(error, item)
       : this.saveErrorFor(error, item)
+  }
+
+  /**
+   * Determine whether the given `error` is a `StopThePromisePoolError` instance.
+   *
+   * @param {Error} error
+   *
+   * @returns {Boolean}
+   */
+  isStoppingThePool (error: Error): boolean {
+    return error instanceof StopThePromisePoolError
   }
 
   /**
@@ -355,13 +366,13 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
    * @param {Error} processingError
    * @param {T} item
    */
-  runErrorHandlerFor (processingError: Error, item: T): void | Promise<void> {
+  async runErrorHandlerFor (processingError: Error, item: T): Promise<void> {
     if (!this.errorHandler) {
       return
     }
 
     try {
-      return this.errorHandler(processingError, item, this)
+      return await this.errorHandler(processingError, item, this)
     } catch (error) {
       this.rethrowIfNotStoppingThePool(error)
     }
@@ -373,7 +384,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
    * @param {Error} error
    */
   rethrowIfNotStoppingThePool (error: Error): void {
-    if (error instanceof StopThePromisePoolError) {
+    if (this.isStoppingThePool(error)) {
       return
     }
 
