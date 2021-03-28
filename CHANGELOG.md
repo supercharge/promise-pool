@@ -1,13 +1,13 @@
 # Changelog
 
 
-## [1.6.1](https://github.com/supercharge/streams/compare/v1.6.0...v1.6.1) - 2021-03-xx
+## [1.6.1](https://github.com/supercharge/promise-pool/compare/v1.6.0...v1.6.1) - 2021-03-xx
 
 ### Fixed
 - typing error when processing a promise pool that was created from non-static methods
 
 
-## [1.6.0](https://github.com/supercharge/streams/compare/v1.5.0...v1.6.0) - 2020-11-03
+## [1.6.0](https://github.com/supercharge/promise-pool/compare/v1.5.0...v1.6.0) - 2020-11-03
 
 ### Added
 - `.handleError(handler)` method: aka “bring your own error handling”. This allows you to take over error handling from the pool. If you impelement the `.handleError` method, the pool won’t collect errors anymore. It puts error handling in your hands.
@@ -19,14 +19,14 @@
 - failed tasks are handled properly now and the pool ensures the concurrency limit. Before, the pool started to process all items as soon as one failed
 
 
-## [1.5.0](https://github.com/supercharge/streams/compare/v1.4.0...v1.5.0) - 2020-09-20
+## [1.5.0](https://github.com/supercharge/promise-pool/compare/v1.4.0...v1.5.0) - 2020-09-20
 
 ### Updated
 - bump dependencies
 - return types for `results` and `errors` now resolve properly for sync and async action handlers
 
 
-## [1.4.0](https://github.com/supercharge/streams/compare/v1.3.0...v1.4.0) - 2020-09-17
+## [1.4.0](https://github.com/supercharge/promise-pool/compare/v1.3.0...v1.4.0) - 2020-09-17
 
 ### Added
 - improved types supporting typed return values
