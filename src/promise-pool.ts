@@ -8,7 +8,7 @@ export class PromisePool<T> {
   /**
    * The processable items.
    */
-  private items: T[]
+  private readonly items: T[]
 
   /**
    * The number of promises running concurrently.
@@ -25,9 +25,9 @@ export class PromisePool<T> {
    *
    * @param {Object} options
    */
-  constructor () {
-    this.items = []
+  constructor (items?: T[]) {
     this.concurrency = 10
+    this.items = items ?? []
     this.errorHandler = undefined
   }
 
@@ -64,10 +64,8 @@ export class PromisePool<T> {
    *
    * @returns {PromisePool}
    */
-  for (items: T[]): PromisePool<T> {
-    return tap(this, () => {
-      this.items = items
-    })
+  for<T> (items: T[]): PromisePool<T> {
+    return new PromisePool<T>(items).withConcurrency(this.concurrency)
   }
 
   /**
