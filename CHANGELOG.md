@@ -1,7 +1,7 @@
 # Changelog
 
 
-## [1.6.1](https://github.com/supercharge/promise-pool/compare/v1.6.0...v1.6.1) - 2021-03-xx
+## [1.6.1](https://github.com/supercharge/promise-pool/compare/v1.6.0...v1.6.1) - 2021-03-28
 
 ### Fixed
 - typing error when processing a promise pool that was created from non-static methods
