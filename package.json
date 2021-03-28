@@ -2,7 +2,7 @@
   "name": "@supercharge/promise-pool",
   "description": "Map-like, concurrent promise processing for Node.js",
   "version": "1.6.0",
-  "author": "Marcus Pöhls <marcus@futurestud.io>",
+  "author": "Marcus Pöhls <marcus@superchargejs.com>",
   "bugs": {
     "url": "https://github.com/superchargejs/promise-pool/issues"
   },
