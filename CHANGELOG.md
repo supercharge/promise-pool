@@ -1,6 +1,12 @@
 # Changelog
 
 
+## [1.6.2](https://github.com/supercharge/promise-pool/compare/v1.6.1...v1.6.2) - 2021-04-09
+
+### Fixed
+- missing concurrency in certain cases when not calling `.withConcurrency()`
+
+
 ## [1.6.1](https://github.com/supercharge/promise-pool/compare/v1.6.0...v1.6.1) - 2021-03-28
 
 ### Fixed
