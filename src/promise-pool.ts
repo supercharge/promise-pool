@@ -14,7 +14,7 @@ export class PromisePool<T> {
    * The number of promises running concurrently.
    */
   private concurrency: number
-  private static concurrency: number
+
   /**
    * The error handler callback function
    */
@@ -51,10 +51,8 @@ export class PromisePool<T> {
    *
    * @returns {PromisePool}
    */
-  static withConcurrency (concurrency: number): typeof PromisePool {
-    return tap(this, () => {
-      this.concurrency = concurrency
-    })
+  static withConcurrency (concurrency: number): PromisePool<unknown> {
+    return new this().withConcurrency(concurrency)
   }
 
   /**
@@ -76,9 +74,7 @@ export class PromisePool<T> {
    * @returns {PromisePool}
    */
   static for<T> (items: T[]): PromisePool<T> {
-    return new this<T>()
-      .for(items)
-      .withConcurrency(this.concurrency)
+    return new this<T>().for(items)
   }
 
   /**
