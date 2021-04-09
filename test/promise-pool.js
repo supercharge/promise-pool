@@ -21,7 +21,7 @@ describe('Promise Pool', () => {
   it('supports a static .withConcurrency method', async () => {
     const pool = PromisePool.withConcurrency(4)
     expect(pool.concurrency).toEqual(4)
-    expect(pool instanceof PromisePool).toBe(false) // pool is not an instance yet
+    expect(pool instanceof PromisePool).toBe(true)
   })
 
   it('allows method chaining for the promise pool setup', async () => {
