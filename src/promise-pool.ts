@@ -1,6 +1,5 @@
 'use strict'
 
-import { tap } from '@supercharge/goodies'
 import { ReturnValue } from './return-value'
 import { PromisePoolExecutor } from './promise-pool-executor'
 
@@ -39,9 +38,9 @@ export class PromisePool<T> {
    * @returns {PromisePool}
    */
   withConcurrency (concurrency: number): PromisePool<T> {
-    return tap(this, () => {
-      this.concurrency = concurrency
-    })
+    this.concurrency = concurrency
+
+    return this
   }
 
   /**
@@ -85,9 +84,9 @@ export class PromisePool<T> {
    * @returns {PromisePool}
    */
   handleError (handler: (error: Error, item: T) => Promise<void> | void): PromisePool<T> {
-    return tap(this, () => {
-      this.errorHandler = handler
-    })
+    this.errorHandler = handler
+
+    return this
   }
 
   /**

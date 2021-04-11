@@ -1,7 +1,6 @@
 'use strict'
 
 import { ReturnValue } from './return-value'
-import { tap, upon } from '@supercharge/goodies'
 import { PromisePoolError } from './promise-pool-error'
 
 export class PromisePoolExecutor<T, R> {
@@ -61,9 +60,9 @@ export class PromisePoolExecutor<T, R> {
    * @returns {PromisePoolExecutor}
    */
   withConcurrency (concurrency: number): this {
-    return tap(this, () => {
-      this.concurrency = concurrency
-    })
+    this.concurrency = concurrency
+
+    return this
   }
 
   /**
@@ -74,9 +73,9 @@ export class PromisePoolExecutor<T, R> {
    * @returns {PromisePoolExecutor}
    */
   for (items: T[]): this {
-    return tap(this, () => {
-      this.items = items
-    })
+    this.items = items
+
+    return this
   }
 
   /**
@@ -87,9 +86,9 @@ export class PromisePoolExecutor<T, R> {
    * @returns {PromisePoolExecutor}
    */
   withHandler (action: (item: T) => R | Promise<R>): this {
-    return tap(this, () => {
-      this.handler = action
-    })
+    this.handler = action
+
+    return this
   }
 
   /**
@@ -100,9 +99,9 @@ export class PromisePoolExecutor<T, R> {
    * @returns {PromisePoolExecutor}
    */
   handleError (handler?: (error: Error, item: T) => Promise<void> | void): this {
-    return tap(this, () => {
-      this.errorHandler = handler
-    })
+    this.errorHandler = handler
+
+    return this
   }
 
   /**
@@ -129,9 +128,9 @@ export class PromisePoolExecutor<T, R> {
    * @returns {Array}
    */
   async start (): Promise<ReturnValue<T, R>> {
-    return upon(this.validateInputs(), async () => {
-      return this.process()
-    })
+    this.validateInputs()
+
+    return await this.process()
   }
 
   /**
