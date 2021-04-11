@@ -1,6 +1,16 @@
 # Changelog
 
 
+## [1.7.0](https://github.com/supercharge/promise-pool/compare/v1.6.2...v1.7.0) - 2021-04-xx
+
+### Updated
+- bump dependencies
+- refactored code to not use the `@supercharge/goodies` package
+
+### Removed
+- dependency to `@supercharge/goodies`
+
+
 ## [1.6.2](https://github.com/supercharge/promise-pool/compare/v1.6.1...v1.6.2) - 2021-04-09
 
 ### Updated
