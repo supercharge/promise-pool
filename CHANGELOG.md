@@ -1,7 +1,7 @@
 # Changelog
 
 
-## [1.7.0](https://github.com/supercharge/promise-pool/compare/v1.6.2...v1.7.0) - 2021-04-xx
+## [1.7.0](https://github.com/supercharge/promise-pool/compare/v1.6.2...v1.7.0) - 2021-04-11
 
 ### Updated
 - bump dependencies
