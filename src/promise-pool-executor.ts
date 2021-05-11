@@ -128,17 +128,17 @@ export class PromisePoolExecutor<T, R> {
    * @returns {Array}
    */
   async start (): Promise<ReturnValue<T, R>> {
-    this.validateInputs()
-
-    return await this.process()
+    return await this.validateInputs().process()
   }
 
   /**
    * Ensure valid inputs and throw otherwise.
    *
+   * @returns {PromisePoolExecutor}
+   *
    * @throws
    */
-  validateInputs (): void {
+  validateInputs (): this {
     if (typeof this.handler !== 'function') {
       throw new Error('The first parameter for the .process(fn) method must be a function')
     }
@@ -156,6 +156,8 @@ export class PromisePoolExecutor<T, R> {
         throw new Error(`The error handler must be a function. Received ${typeof this.errorHandler}`)
       }
     }
+
+    return this
   }
 
   /**
@@ -175,7 +177,7 @@ export class PromisePoolExecutor<T, R> {
       this.startProcessing(item)
     }
 
-    return this.drained()
+    return await this.drained()
   }
 
   /**
@@ -185,7 +187,7 @@ export class PromisePoolExecutor<T, R> {
    * @returns {Promise}
    */
   async processingSlot (): Promise<void> {
-    return this.waitForTaskToFinish()
+    return await this.waitForTaskToFinish()
   }
 
   /**
