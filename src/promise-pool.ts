@@ -1,7 +1,6 @@
 'use strict'
 
 import { Stoppable } from './stoppable'
-import { tap } from '@supercharge/goodies'
 import { ReturnValue } from './return-value'
 import { PromisePoolExecutor } from './promise-pool-executor'
 
@@ -9,13 +8,12 @@ export class PromisePool<T> {
   /**
    * The processable items.
    */
-  private items: T[]
+  private readonly items: T[]
 
   /**
    * The number of promises running concurrently.
    */
   private concurrency: number
-  private static concurrency: number
 
   /**
    * The error handler callback function
@@ -27,9 +25,9 @@ export class PromisePool<T> {
    *
    * @param {Object} options
    */
-  constructor () {
-    this.items = []
+  constructor (items?: T[]) {
     this.concurrency = 10
+    this.items = items ?? []
     this.errorHandler = undefined
   }
 
@@ -41,9 +39,9 @@ export class PromisePool<T> {
    * @returns {PromisePool}
    */
   withConcurrency (concurrency: number): PromisePool<T> {
-    return tap(this, () => {
-      this.concurrency = concurrency
-    })
+    this.concurrency = concurrency
+
+    return this
   }
 
   /**
@@ -53,10 +51,8 @@ export class PromisePool<T> {
    *
    * @returns {PromisePool}
    */
-  static withConcurrency (concurrency: number): typeof PromisePool {
-    return tap(this, () => {
-      this.concurrency = concurrency
-    })
+  static withConcurrency (concurrency: number): PromisePool<unknown> {
+    return new this().withConcurrency(concurrency)
   }
 
   /**
@@ -66,10 +62,8 @@ export class PromisePool<T> {
    *
    * @returns {PromisePool}
    */
-  for (items: T[]): PromisePool<T> {
-    return tap(this, () => {
-      this.items = items
-    })
+  for<T> (items: T[]): PromisePool<T> {
+    return new PromisePool<T>(items).withConcurrency(this.concurrency)
   }
 
   /**
@@ -80,9 +74,7 @@ export class PromisePool<T> {
    * @returns {PromisePool}
    */
   static for<T> (items: T[]): PromisePool<T> {
-    return new this<T>()
-      .for(items)
-      .withConcurrency(this.concurrency)
+    return new this<T>().for(items)
   }
 
   /**
@@ -92,10 +84,10 @@ export class PromisePool<T> {
    *
    * @returns {PromisePool}
    */
-  handleError (handler: (error: Error, item: T, pool: Stoppable) => void | Promise<void>): PromisePool<T> {
-    return tap(this, () => {
-      this.errorHandler = handler
-    })
+  handleError (handler: (error: Error, item: T) => Promise<void> | void): PromisePool<T> {
+    this.errorHandler = handler
+
+    return this
   }
 
   /**
