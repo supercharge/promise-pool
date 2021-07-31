@@ -1,18 +1,20 @@
 {
-  "env": {
-    "es6": true,
-    "node": true,
-    "jest": true
-  },
-  "extends": [
-    "standard-with-typescript"
-  ],
-  "parserOptions": {
-    "project": "./tsconfig.json"
-  },
-  "rules": {
-    "@typescript-eslint/return-await": 0,
-    "@typescript-eslint/require-await": 0,
-    "@typescript-eslint/strict-boolean-expressions": 0
-  }
+	"env": {
+		"es6": true,
+		"node": true,
+		"jest": true
+	},
+	"extends": ["standard-with-typescript"],
+	"parserOptions": {
+		"project": "./tsconfig.json"
+	},
+	"rules": {
+		"semi": ["error", "always"],
+		"quotes": 0,
+		"indent": 0,
+		"no-tabs": 0,
+		"@typescript-eslint/return-await": 0,
+		"@typescript-eslint/require-await": 0,
+		"@typescript-eslint/strict-boolean-expressions": 0
+	}
 }
