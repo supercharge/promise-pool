@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 
-import { PromisePoolExecutor } from "./promise-pool-executor";
-import { ReturnValue } from "./return-value";
+import { PromisePoolExecutor } from './promise-pool-executor';
+import { ReturnValue } from './return-value';
 
 export class PromisePool<T> {
 	/**

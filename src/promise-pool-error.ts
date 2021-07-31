@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 export class PromisePoolError<T> extends Error {
 	/**
@@ -46,14 +46,14 @@ export class PromisePoolError<T> extends Error {
 			return error.message;
 		}
 
-		if (typeof error === "object") {
+		if (typeof error === 'object') {
 			return error.message;
 		}
 
-		if (typeof error === "string" || typeof error === "number") {
+		if (typeof error === 'string' || typeof error === 'number') {
 			return error.toString();
 		}
 
-		return "";
+		return '';
 	}
 }

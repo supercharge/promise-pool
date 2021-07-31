@@ -1,5 +1,5 @@
-"use strict";
+'use strict';
 
-import { PromisePool } from "./promise-pool";
+import { PromisePool } from './promise-pool';
 
 export = PromisePool;

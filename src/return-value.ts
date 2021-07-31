@@ -1,6 +1,6 @@
-"use strict";
+'use strict';
 
-import { PromisePoolError } from "./promise-pool-error";
+import { PromisePoolError } from './promise-pool-error';
 
 export interface ReturnValue<T, R> {
 	/**

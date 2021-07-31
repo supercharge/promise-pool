@@ -1,7 +1,7 @@
-"use strict";
+'use strict';
 
-import { PromisePoolError } from "./promise-pool-error";
-import { ReturnValue } from "./return-value";
+import { PromisePoolError } from './promise-pool-error';
+import { ReturnValue } from './return-value';
 
 export class PromisePoolExecutor<T, R> {
 	/**
@@ -164,11 +164,11 @@ export class PromisePoolExecutor<T, R> {
 	 * @throws
 	 */
 	validateInputs(): this {
-		if (typeof this._handler !== "function") {
-			throw new Error("The first parameter for the .process(fn) method must be a function");
+		if (typeof this._handler !== 'function') {
+			throw new Error('The first parameter for the .process(fn) method must be a function');
 		}
 
-		if (!(typeof this._concurrency === "number" && this._concurrency >= 1)) {
+		if (!(typeof this._concurrency === 'number' && this._concurrency >= 1)) {
 			throw new TypeError(`"concurrency" must be a number, 1 or up. Received "${this._concurrency}" (${typeof this._concurrency})`);
 		}
 
@@ -177,7 +177,7 @@ export class PromisePoolExecutor<T, R> {
 		}
 
 		if (this._errorHandler) {
-			if (typeof this._errorHandler !== "function") {
+			if (typeof this._errorHandler !== 'function') {
 				throw new Error(`The error handler must be a function. Received ${typeof this._errorHandler}`);
 			}
 		}
