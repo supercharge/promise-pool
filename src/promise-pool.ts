@@ -7,17 +7,22 @@ export class PromisePool<T> {
 	/**
 	 * The processable items.
 	 */
-	private readonly items: T[];
+	private readonly _items: T[];
 
 	/**
 	 * The number of promises running concurrently.
 	 */
-	private concurrency: number;
+	private _concurrency: number;
 
 	/**
 	 * The error handler callback function
 	 */
-	private errorHandler?: (error: Error, item: T) => void | Promise<void>;
+	private _errorHandler?: (error: Error, item: T) => void | Promise<void>;
+
+	/**
+	 * This function runs after each execution
+	 */
+	private _onProgress?: (result: any, progress: number, total: number) => any;
 
 	/**
 	 * Instantiates a new promise pool with a default `concurrency: 10` and `items: []`.
@@ -25,9 +30,10 @@ export class PromisePool<T> {
 	 * @param {Object} options
 	 */
 	constructor(items?: T[]) {
-		this.concurrency = 10;
-		this.items = items ?? [];
-		this.errorHandler = undefined;
+		this._concurrency = 10;
+		this._items = items ?? [];
+		this._errorHandler = undefined;
+		this._onProgress = undefined;
 	}
 
 	/**
@@ -38,7 +44,7 @@ export class PromisePool<T> {
 	 * @returns {PromisePool}
 	 */
 	withConcurrency(concurrency: number): PromisePool<T> {
-		this.concurrency = concurrency;
+		this._concurrency = concurrency;
 
 		return this;
 	}
@@ -62,7 +68,20 @@ export class PromisePool<T> {
 	 * @returns {PromisePool}
 	 */
 	for<T>(items: T[]): PromisePool<T> {
-		return new PromisePool<T>(items).withConcurrency(this.concurrency);
+		return new PromisePool<T>(items).withConcurrency(this._concurrency);
+	}
+
+	/**
+	 * Set the on progress handler
+	 *
+	 * @param {onProgressFunction} progressFunction
+	 *
+	 * @returns {PromisePoolExecutor}
+	 */
+	onProgress(progressFunction: (result: any, progress: number, total: number) => any): this {
+		this._onProgress = progressFunction;
+
+		return this;
 	}
 
 	/**
@@ -84,7 +103,7 @@ export class PromisePool<T> {
 	 * @returns {PromisePool}
 	 */
 	handleError(handler: (error: Error, item: T) => Promise<void> | void): PromisePool<T> {
-		this.errorHandler = handler;
+		this._errorHandler = handler;
 
 		return this;
 	}
@@ -99,10 +118,11 @@ export class PromisePool<T> {
 	 */
 	async process<R>(callback: (item: T) => R | Promise<R>): Promise<ReturnValue<T, R>> {
 		return new PromisePoolExecutor<T, R>()
-			.withConcurrency(this.concurrency)
+			.withConcurrency(this._concurrency)
 			.withHandler(callback)
-			.handleError(this.errorHandler)
-			.for(this.items)
+			.handleError(this._errorHandler)
+			.onProgress(this._onProgress)
+			.for(this._items)
 			.start();
 	}
 }
