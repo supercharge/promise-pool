@@ -10,6 +10,10 @@
 	},
 	"rules": {
 		"semi": ["error", "always"],
+		"@typescript-eslint/semi": ["error", "always"],
+		"@typescript-eslint/indent": ["off"],
+		"@typescript-eslint/quotes": ["off"],
+		"@typescript-eslint/space-before-function-paren": ["off"],
 		"quotes": 0,
 		"indent": 0,
 		"no-tabs": 0,
