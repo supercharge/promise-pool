@@ -37,7 +37,7 @@ export class PromisePoolExecutor<T, R> {
 	/**
 	 * This function runs after each execution
 	 */
-	private _onProgress?: (result: R, progress: number, total: number) => any;
+	private _progressHandler?: (result: R, progress: number, total: number) => any;
 
 	/**
 	 * The async error handling function.
@@ -60,7 +60,7 @@ export class PromisePoolExecutor<T, R> {
 		this._concurrency = 10;
 		this._finished_tasks = 0;
 		this._handler = () => {};
-		this._onProgress = () => {};
+		this._progressHandler = () => {};
 		this._errorHandler = undefined;
 	}
 
@@ -97,8 +97,8 @@ export class PromisePoolExecutor<T, R> {
 	 *
 	 * @returns {PromisePoolExecutor}
 	 */
-	onProgress(progressFunction: (result: R, progress: number, total: number) => any): this {
-		this._onProgress = progressFunction;
+	onProgress(progressFunction?: (result: R, progress: number, total: number) => any): this {
+		this._progressHandler = progressFunction;
 
 		return this;
 	}
@@ -234,13 +234,13 @@ export class PromisePoolExecutor<T, R> {
 				this._results.push(result);
 				this._tasks.splice(this._tasks.indexOf(task), 1);
 				this._finished_tasks++;
-				this._onProgress?.(result, this._finished_tasks, this._items.length);
+				this._progressHandler?.(result, this._finished_tasks, this._items.length);
 			})
 			.catch((error) => {
 				this._tasks.splice(this._tasks.indexOf(task), 1);
 				this._finished_tasks++;
 
-				this._onProgress?.(error, this._finished_tasks, this._items.length);
+				this._progressHandler?.(error, this._finished_tasks, this._items.length);
 
 				if (this._errorHandler) {
 					return this._errorHandler(error, item);
