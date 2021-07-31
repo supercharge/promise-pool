@@ -31,3 +31,4 @@ coverage
 .vscode
 
 .vagrant
+yarn.lock
