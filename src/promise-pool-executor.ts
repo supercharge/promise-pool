@@ -233,13 +233,14 @@ export class PromisePoolExecutor<T, R> {
 			.then((result) => {
 				this._results.push(result);
 				this._tasks.splice(this._tasks.indexOf(task), 1);
+
 				this._finished_tasks++;
 				this._progressHandler?.(result, this._finished_tasks, this._items.length);
 			})
 			.catch((error) => {
 				this._tasks.splice(this._tasks.indexOf(task), 1);
-				this._finished_tasks++;
 
+				this._finished_tasks++;
 				this._progressHandler?.(error, this._finished_tasks, this._items.length);
 
 				if (this._errorHandler) {

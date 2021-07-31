@@ -99,7 +99,7 @@ describe("Promise Pool", () => {
 
 	it("ensures concurrency", async () => {
 		const start = Date.now();
-		const timeouts = [100, 20, 30, 10, 10, 10, 50];
+		const timeouts = [1000, 200, 300, 100, 100, 100, 500];
 
 		const { results } = await PromisePool.withConcurrency(2)
 			.for(timeouts)
@@ -108,13 +108,13 @@ describe("Promise Pool", () => {
 				return timeout;
 			});
 
-		expect(results).toEqual([20, 30, 10, 10, 10, 100, 50]);
+		expect(results).toEqual([200, 300, 100, 100, 100, 1000, 500]);
 
 		const elapsed = Date.now() - start;
 
 		// expect the first task to take the longest processing time
 		// and expect all other tasks to finish while task 1 is running
-		expect(elapsed).toBeWithin(130, 160);
+		expect(elapsed).toBeWithin(1300, 1600);
 	});
 
 	it("handles concurrency greater than items in the list", async () => {
@@ -223,6 +223,24 @@ describe("Promise Pool", () => {
 		expect(errors).toEqual([]);
 		expect(results).toEqual([1, 2, 3, 4]);
 		expect(collectedProgress).toEqual([0.25, 0.5, 0.75, 1]);
+	});
+	it("should call the onProgress function with result as input", async () => {
+		const input = [1, "hello", 2, 3];
+		const collectedProgress = [];
+
+		const { results, errors } = await PromisePool.withConcurrency(2)
+			.for(input)
+			.onProgress((result, prog, total) => {
+				if (typeof result === "number") collectedProgress.push(result * 2);
+				else collectedProgress.push(result);
+			})
+			.process((id) => {
+				return id;
+			});
+
+		expect(errors).toEqual([]);
+		expect(results).toEqual([1, "hello", 2, 3]);
+		expect(collectedProgress).toEqual([2, "hello", 4, 6]);
 	});
 
 	it("should allow custom processing on a specific error", async () => {
