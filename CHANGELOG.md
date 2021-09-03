@@ -1,6 +1,18 @@
 # Changelog
 
 
+## [1.8.0](https://github.com/supercharge/promise-pool/compare/v1.7.0...v1.8.0) - 2021-xx-xx
+
+### Added
+- test code on Node.js v16
+
+### Updated
+- bump dependencies
+
+### Removed
+- testing on Node.js v15
+
+
 ## [1.7.0](https://github.com/supercharge/promise-pool/compare/v1.6.2...v1.7.0) - 2021-04-11
 
 ### Updated
