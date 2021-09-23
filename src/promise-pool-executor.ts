@@ -27,7 +27,7 @@ export class PromisePoolExecutor<T, R> {
   /**
    * The async processing function receiving each item from the `items` array.
    */
-  private handler: (item: T, i: string) => any
+  private handler: (item: T, i: number) => any
 
   /**
    * The async error handling function.
@@ -85,7 +85,7 @@ export class PromisePoolExecutor<T, R> {
    *
    * @returns {PromisePoolExecutor}
    */
-  withHandler (action: (item: T, i: string) => R | Promise<R>): this {
+  withHandler (action: (item: T, i: number) => R | Promise<R>): this {
     this.handler = action
 
     return this
@@ -169,7 +169,7 @@ export class PromisePoolExecutor<T, R> {
    * @returns {Promise}
    */
   async process (): Promise<ReturnValue<T, R>> {
-    for (const [i, item] of Object.entries(this.items)) {
+    for (const [i, item] of this.items.entries()) {
       if (this.hasReachedConcurrencyLimit()) {
         await this.processingSlot()
       }
@@ -202,7 +202,7 @@ export class PromisePoolExecutor<T, R> {
    *
    * @param {*} item
    */
-  startProcessing (item: T, i: string): void {
+  startProcessing (item: T, i: number): void {
     const task = this.createTaskFor(item, i)
       .then(result => {
         this.results.push(result)
@@ -230,7 +230,7 @@ export class PromisePoolExecutor<T, R> {
    *
    * @returns {*}
    */
-  async createTaskFor (item: T, i: string): Promise<any> {
+  async createTaskFor (item: T, i: number): Promise<any> {
     return this.handler(item, i)
   }
 
