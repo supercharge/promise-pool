@@ -308,4 +308,18 @@ describe('Promise Pool', () => {
 
     expect(errors).toSatisfyAll(error => error.message === 'failed')
   })
+
+  it('returns the iterator', async () => {
+    const ids = [1, 2, 3, 4, 5]
+
+    const { results } = await PromisePool
+      .withConcurrency(3000)
+      .for(ids)
+      .process(async (timeout, i) => {
+        await pause(timeout)
+        return [timeout, i]
+      })
+
+    expect(results).toEqual([[1, 0], [2, 1], [3, 2], [4, 3], [5, 4]])
+  })
 })
