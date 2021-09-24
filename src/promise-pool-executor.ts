@@ -3,6 +3,8 @@
 import { ReturnValue } from './return-value'
 import { PromisePoolError } from './promise-pool-error'
 
+export type ProcessHandler<T, R> = (item: T, index: number) => R | Promise<R>
+
 export class PromisePoolExecutor<T, R> {
   /**
    * The list of items to process.
@@ -27,7 +29,7 @@ export class PromisePoolExecutor<T, R> {
   /**
    * The async processing function receiving each item from the `items` array.
    */
-  private handler: (item: T, i: number) => any
+  private handler: ProcessHandler<T, any>
 
   /**
    * The async error handling function.
@@ -85,7 +87,7 @@ export class PromisePoolExecutor<T, R> {
    *
    * @returns {PromisePoolExecutor}
    */
-  withHandler (action: (item: T, i: number) => R | Promise<R>): this {
+  withHandler (action: ProcessHandler<T, R>): this {
     this.handler = action
 
     return this
@@ -151,10 +153,8 @@ export class PromisePoolExecutor<T, R> {
       throw new TypeError(`"items" must be an array. Received ${typeof this.items}`)
     }
 
-    if (this.errorHandler) {
-      if (typeof this.errorHandler !== 'function') {
-        throw new Error(`The error handler must be a function. Received ${typeof this.errorHandler}`)
-      }
+    if (this.errorHandler && typeof this.errorHandler !== 'function') {
+      throw new Error(`The error handler must be a function. Received ${typeof this.errorHandler}`)
     }
 
     return this
@@ -169,12 +169,12 @@ export class PromisePoolExecutor<T, R> {
    * @returns {Promise}
    */
   async process (): Promise<ReturnValue<T, R>> {
-    for (const [i, item] of this.items.entries()) {
+    for (const [index, item] of this.items.entries()) {
       if (this.hasReachedConcurrencyLimit()) {
         await this.processingSlot()
       }
 
-      this.startProcessing(item, i)
+      this.startProcessing(item, index)
     }
 
     return await this.drained()
@@ -200,10 +200,11 @@ export class PromisePoolExecutor<T, R> {
   /**
    * Create a processing function for the given `item`.
    *
-   * @param {*} item
+   * @param {T} item
+   * @param {number} index
    */
-  startProcessing (item: T, i: number): void {
-    const task = this.createTaskFor(item, i)
+  startProcessing (item: T, index: number): void {
+    const task = this.createTaskFor(item, index)
       .then(result => {
         this.results.push(result)
         this.tasks.splice(this.tasks.indexOf(task), 1)
@@ -226,12 +227,13 @@ export class PromisePoolExecutor<T, R> {
   /**
    * Ensures a returned promise for the processing of the given `item`.
    *
-   * @param item
+   * @param {T} item
+   * @param {number} index
    *
    * @returns {*}
    */
-  async createTaskFor (item: T, i: number): Promise<any> {
-    return this.handler(item, i)
+  async createTaskFor (item: T, index: number): Promise<any> {
+    return this.handler(item, index)
   }
 
   /**
