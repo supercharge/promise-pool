@@ -309,17 +309,23 @@ describe('Promise Pool', () => {
     expect(errors).toSatisfyAll(error => error.message === 'failed')
   })
 
-  it('returns the iterator', async () => {
+  it('.process provides an index as the second argument', async () => {
     const ids = [1, 2, 3, 4, 5]
 
     const { results } = await PromisePool
-      .withConcurrency(3000)
+      .withConcurrency(10)
       .for(ids)
-      .process(async (timeout, i) => {
+      .process(async (timeout, index) => {
         await pause(timeout)
-        return [timeout, i]
+        return { index, timeout }
       })
 
-    expect(results).toEqual([[1, 0], [2, 1], [3, 2], [4, 3], [5, 4]])
+    expect(results).toEqual([
+      { index: 0, timeout: 1 },
+      { index: 1, timeout: 2 },
+      { index: 2, timeout: 3 },
+      { index: 3, timeout: 4 },
+      { index: 4, timeout: 5 }
+    ])
   })
 })
