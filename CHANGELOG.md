@@ -1,6 +1,13 @@
 # Changelog
 
 
+## [1.9.0](https://github.com/supercharge/promise-pool/compare/v1.8.0...v1.9.0) - 2021-xx-xx
+
+### Updated
+- bump dependencies
+- refined example output (in `examples/promise-pool.js`)
+
+
 ## [1.8.0](https://github.com/supercharge/promise-pool/compare/v1.7.0...v1.8.0) - 2021-09-24
 
 ### Added
