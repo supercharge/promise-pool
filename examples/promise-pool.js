@@ -22,11 +22,11 @@ async function run () {
   const { results, errors } = await PromisePool
     .for(timeouts)
     .withConcurrency(2)
-    .process(async (timeout, i) => {
+    .process(async (timeout, index) => {
       await new Promise(resolve => setTimeout(resolve, timeout))
-      console.log(`#${i}: waited ${timeout}ms`)
+      console.log(`#${index}: waited ${timeout}ms`)
 
-      return [timeout, i]
+      return { item: index, timeout }
     })
 
   console.log('Results ->')
