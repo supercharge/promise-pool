@@ -1,7 +1,7 @@
 # Changelog
 
 
-## [1.9.0](https://github.com/supercharge/promise-pool/compare/v1.8.0...v1.9.0) - 2021-xx-xx
+## [1.9.0](https://github.com/supercharge/promise-pool/compare/v1.8.0...v1.9.0) - 2021-11-xx
 
 ### Added
 - `pool.stop()` method
@@ -11,6 +11,7 @@
 - bump dependencies
 - use UVU and c8 for testing (instead of Jest)
 - refined example output (in `examples/promise-pool.js`)
+- extend `README` with examples on how to stop an active promise pool
 
 
 ## [1.8.0](https://github.com/supercharge/promise-pool/compare/v1.7.0...v1.8.0) - 2021-09-24
