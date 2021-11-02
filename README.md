@@ -57,7 +57,7 @@ const users = [
 const { results, errors } = await PromisePool
   .withConcurrency(2)
   .for(users)
-  .process(async (userData, index) => {
+  .process(async (userData, index, pool) => {
     const user = await User.createIfNotExisting(userData)
 
     return user
@@ -73,6 +73,40 @@ await PromisePool
     // processes 10 items in parallel by default
   })
 ```
+
+
+### Manually Stop the Pool
+You can stop the processing of a promise pool using the `pool` instance provided to the `.process()` and `.handleError()` methods. Here’s an example how you can stop an active promise pool from within the `.process()` method:
+
+```js
+await PromisePool
+  .for(users)
+  .process(async (user, index, pool) => {
+    if (condition) {
+      return pool.stop()
+    }
+
+    // processes the `user` data
+  })
+```
+
+You may also stop the pool from within the `.handleError()` method in case you need to:
+
+```js
+await PromisePool
+  .for(users)
+  .handleError(async (error, user, pool) => {
+    if (error instanceof SomethingBadHappenedError) {
+      return pool.stop()
+    }
+
+    // handle the given `error`
+  })
+  .process(async (user, index, pool) => {
+    // processes the `user` data
+  })
+```
+
 
 ### Bring Your Own Error Handling
 The promise pool allows for custom error handling. You can take over the error handling by implementing an error handler using the `.handleError(handler)`.
