@@ -19,7 +19,7 @@ export class PromisePoolExecutor<T, R> {
   /**
    * The intermediate list of currently running tasks.
    */
-  private readonly tasks: any[]
+  private readonly tasks: Array<Promise<any>>
 
   /**
    * The list of results.
