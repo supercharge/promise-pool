@@ -3,8 +3,12 @@
 
 ## [1.9.0](https://github.com/supercharge/promise-pool/compare/v1.8.0...v1.9.0) - 2021-xx-xx
 
+### Added
+- add `downlevelIteration: true` option to `tsconfig.json`
+
 ### Updated
 - bump dependencies
+- use UVU and c8 for testing (instead of Jest)
 - refined example output (in `examples/promise-pool.js`)
 
 
