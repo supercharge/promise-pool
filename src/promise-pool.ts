@@ -1,8 +1,7 @@
 'use strict'
 
-import { Stoppable } from './stoppable'
 import { ReturnValue } from './return-value'
-import { PromisePoolExecutor } from './promise-pool-executor'
+import { ErrorHandler, ProcessHandler, PromisePoolExecutor } from './promise-pool-executor'
 
 export class PromisePool<T> {
   /**
@@ -18,7 +17,7 @@ export class PromisePool<T> {
   /**
    * The error handler callback function
    */
-  private errorHandler?: (error: Error, item: T, pool: Stoppable) => void | Promise<void>
+  private errorHandler?: ErrorHandler<T>
 
   /**
    * Instantiates a new promise pool with a default `concurrency: 10` and `items: []`.
@@ -84,7 +83,7 @@ export class PromisePool<T> {
    *
    * @returns {PromisePool}
    */
-  handleError (handler: (error: Error, item: T) => Promise<void> | void): PromisePool<T> {
+  handleError (handler: ErrorHandler<T>): PromisePool<T> {
     this.errorHandler = handler
 
     return this
@@ -98,7 +97,7 @@ export class PromisePool<T> {
    *
    * @returns Promise<{ results, errors }>
    */
-  async process<R> (callback: (item: T, pool: Stoppable) => R | Promise<R>): Promise<ReturnValue<T, R>> {
+  async process<R> (callback: ProcessHandler<T, R>): Promise<ReturnValue<T, R>> {
     return new PromisePoolExecutor<T, R>()
       .withConcurrency(this.concurrency)
       .withHandler(callback)

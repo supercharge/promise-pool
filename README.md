@@ -57,8 +57,8 @@ const users = [
 const { results, errors } = await PromisePool
   .withConcurrency(2)
   .for(users)
-  .process(async data => {
-    const user = await User.createIfNotExisting(data)
+  .process(async (userData, index) => {
+    const user = await User.createIfNotExisting(userData)
 
     return user
   })
@@ -130,5 +130,5 @@ MIT © [Supercharge](https://superchargejs.com)
 ---
 
 > [superchargejs.com](https://superchargejs.com) &nbsp;&middot;&nbsp;
-> GitHub [@superchargejs](https://github.com/superchargejs/) &nbsp;&middot;&nbsp;
+> GitHub [@supercharge](https://github.com/supercharge) &nbsp;&middot;&nbsp;
 > Twitter [@superchargejs](https://twitter.com/superchargejs)

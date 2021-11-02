@@ -1,13 +1,37 @@
 # Changelog
 
 
-## [1.8.0](https://github.com/supercharge/promise-pool/compare/v1.7.0...v1.8.0) - 2021-xx-xx
+## [1.9.0](https://github.com/supercharge/promise-pool/compare/v1.8.0...v1.9.0) - 2021-xx-xx
 
 ### Added
 - `pool.stop()` method
+- add `downlevelIteration: true` option to `tsconfig.json`
 
 ### Updated
 - bump dependencies
+- use UVU and c8 for testing (instead of Jest)
+- refined example output (in `examples/promise-pool.js`)
+
+
+## [1.8.0](https://github.com/supercharge/promise-pool/compare/v1.7.0...v1.8.0) - 2021-09-24
+
+### Added
+- test code on Node.js v16
+- provide `index` as the second argument in the `process` function
+  ```js
+    await PromisePool
+      .withConcurrency(2)
+      .for([1,2,3,4])
+      .process(async (num, index) => {
+        // processing …
+      })
+  ```
+
+### Updated
+- bump dependencies
+
+### Removed
+- testing on Node.js v15
 
 
 ## [1.7.0](https://github.com/supercharge/promise-pool/compare/v1.6.2...v1.7.0) - 2021-04-11

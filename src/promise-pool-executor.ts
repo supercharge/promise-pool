@@ -5,12 +5,11 @@ import { ReturnValue } from './return-value'
 import { PromisePoolError } from './promise-pool-error'
 import { StopThePromisePoolError } from './stop-the-promise-pool-error'
 
-type ErrorHandler<T> = (error: Error, item: T, pool: Stoppable) => void | Promise<void>
+export type ErrorHandler<T> = (error: Error, item: T, pool: Stoppable) => void | Promise<void>
+
+export type ProcessHandler<T, R> = (item: T, index: number, pool: Stoppable) => R | Promise<R>
 
 export class PromisePoolExecutor<T, R> implements Stoppable {
-  /**
-   * The list of items to process.
-   */
   private meta: {
     /**
      * The list of items to process.
@@ -46,7 +45,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
   /**
    * The async processing function receiving each item from the `items` array.
    */
-  private handler: (item: T, pool: Stoppable) => any
+  private handler: (item: T, index: number, pool: Stoppable) => any
 
   /**
    * The async error handling function.
@@ -147,10 +146,19 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
    *
    * @returns {PromisePoolExecutor}
    */
-  withHandler (action: (item: T, pool: Stoppable) => R | Promise<R>): this {
+  withHandler (action: ProcessHandler<T, R>): this {
     this.handler = action
 
     return this
+  }
+
+  /**
+   * Determine whether a custom error handle is available.
+   *
+   * @returns {Boolean}
+   */
+  hasErrorHandler (): boolean {
+    return !!this.errorHandler
   }
 
   /**
@@ -209,7 +217,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
    *
    * @returns {Boolean}
    */
-  stopped (): boolean {
+  isStopped (): boolean {
     return this.meta.stopped
   }
 
@@ -242,10 +250,8 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
       throw new TypeError(`"items" must be an array. Received ${typeof this.items()}`)
     }
 
-    if (this.errorHandler) {
-      if (typeof this.errorHandler !== 'function') {
-        throw new Error(`The error handler must be a function. Received ${typeof this.errorHandler}`)
-      }
+    if (this.errorHandler && typeof this.errorHandler !== 'function') {
+      throw new Error(`The error handler must be a function. Received ${typeof this.errorHandler}`)
     }
 
     return this
@@ -260,8 +266,8 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
    * @returns {Promise}
    */
   async process (): Promise<ReturnValue<T, R>> {
-    for (const item of this.items()) {
-      if (this.stopped()) {
+    for (const [index, item] of this.items().entries()) {
+      if (this.isStopped()) {
         break
       }
 
@@ -269,20 +275,10 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
         await this.waitForTaskToFinish()
       }
 
-      this.startProcessing(item)
+      this.startProcessing(item, index)
     }
 
     return await this.drained()
-  }
-
-  /**
-   * Creates a deferred promise and pushes the related callback to the pending
-   * queue. Returns the promise which is used to wait for the callback.
-   *
-   * @returns {Promise}
-   */
-  async processingSlot (): Promise<void> {
-    return await this.waitForTaskToFinish()
   }
 
   /**
@@ -297,10 +293,11 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
   /**
    * Create a processing function for the given `item`.
    *
-   * @param {*} item
+   * @param {T} item
+   * @param {number} index
    */
-  startProcessing (item: T): void {
-    const task: Promise<void> = this.createTaskFor(item)
+  startProcessing (item: T, index: number): void {
+    const task: Promise<void> = this.createTaskFor(item, index)
       .then(result => {
         this
           .removeActive(task)
@@ -318,12 +315,13 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
   /**
    * Ensures a returned promise for the processing of the given `item`.
    *
-   * @param item
+   * @param {T} item
+   * @param {number} index
    *
    * @returns {*}
    */
-  async createTaskFor (item: T): Promise<any> {
-    return this.handler(item, this)
+  async createTaskFor (item: T, index: number): Promise<any> {
+    return this.handler(item, index, this)
   }
 
   /**
@@ -362,7 +360,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
       return
     }
 
-    return this.errorHandler
+    return this.hasErrorHandler()
       ? await this.runErrorHandlerFor(error, item)
       : this.saveErrorFor(error, item)
   }
@@ -385,13 +383,9 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
    * @param {T} item
    */
   async runErrorHandlerFor (processingError: Error, item: T): Promise<void> {
-    if (!this.errorHandler) {
-      return
-    }
-
     try {
-      return await this.errorHandler(processingError, item, this)
-    } catch (error) {
+      return await this.errorHandler?.(processingError, item, this)
+    } catch (error: any) {
       this.rethrowIfNotStoppingThePool(error)
     }
   }

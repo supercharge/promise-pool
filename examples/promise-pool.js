@@ -10,7 +10,7 @@ const PromisePool = require('../dist')
  *
  * @returns {Array}
  */
-const shuffle = function (array) {
+function shuffle (array) {
   return array.sort(() => Math.random() - 0.5)
 }
 
@@ -22,11 +22,11 @@ async function run () {
   const { results, errors } = await PromisePool
     .for(timeouts)
     .withConcurrency(2)
-    .process(async (timeout) => {
+    .process(async (timeout, index) => {
       await new Promise(resolve => setTimeout(resolve, timeout))
-      console.log(`waited ${timeout}ms`)
+      console.log(`#${index}: waited ${timeout}ms`)
 
-      return timeout
+      return { item: index, timeout }
     })
 
   console.log('Results ->')
