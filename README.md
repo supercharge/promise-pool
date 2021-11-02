@@ -75,7 +75,7 @@ await PromisePool
 ```
 
 
-### Manually Stop the Pool
+## Manually Stop the Pool
 You can stop the processing of a promise pool using the `pool` instance provided to the `.process()` and `.handleError()` methods. Here’s an example how you can stop an active promise pool from within the `.process()` method:
 
 ```js
@@ -108,7 +108,7 @@ await PromisePool
 ```
 
 
-### Bring Your Own Error Handling
+## Bring Your Own Error Handling
 The promise pool allows for custom error handling. You can take over the error handling by implementing an error handler using the `.handleError(handler)`.
 
 > If you provide an error handler, the promise pool doesn’t collect any errors. You must then collect errors yourself.
