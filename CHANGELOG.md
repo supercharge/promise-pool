@@ -1,7 +1,6 @@
 # Changelog
 
-
-## [1.9.0](https://github.com/supercharge/promise-pool/compare/v1.8.0...v1.9.0) - 2021-11-xx
+## [1.9.0](https://github.com/supercharge/promise-pool/compare/v1.8.0...v1.9.0) - 2021-11-03
 
 ### Added
 - `pool.stop()` method
