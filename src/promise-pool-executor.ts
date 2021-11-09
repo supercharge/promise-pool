@@ -64,6 +64,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
       stopped: false,
       concurrency: 10
     }
+
     this.handler = () => {}
     this.errorHandler = undefined
   }
