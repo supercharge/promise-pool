@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/supercharge/promise-pool/compare/v1.9.0...v2.0.0) - 2021-11-09
+
+### Breaking Changes
+The `2.x` release line changes the exports of this package:
+
+```js
+// ESM and TypeScript
+import { PromisePool } from '@supercharge/promise-pool'
+
+// CommonJS
+const { PromisePool } = require('@supercharge/promise-pool')
+```
+
+The `1.x` releases used CommonJS- and ESM-compatible default exports. That required TypeScript packages using ESM imports to enable the `esModuleInterop` flag in their `tsconfig.json` file. The named exports in `2.x` don’t require that flag anymore.
+
+
 ## [1.9.0](https://github.com/supercharge/promise-pool/compare/v1.8.0...v1.9.0) - 2021-11-03
 
 ### Added
