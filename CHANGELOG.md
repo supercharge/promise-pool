@@ -6,11 +6,15 @@
 The `2.x` release line changes the exports of this package:
 
 ```js
-// ESM and TypeScript
+// Now: 2.x
 import { PromisePool } from '@supercharge/promise-pool'
-
-// CommonJS
+// or
 const { PromisePool } = require('@supercharge/promise-pool')
+
+// Before: 1.x
+import PromisePool from '@supercharge/promise-pool' // required the `esModuleInterop` flag in tsconfig.json
+// or
+const PromisePool = require('@supercharge/promise-pool')
 ```
 
 The `1.x` releases used CommonJS- and ESM-compatible default exports. That required TypeScript packages using ESM imports to enable the `esModuleInterop` flag in their `tsconfig.json` file. The named exports in `2.x` don’t require that flag anymore.
