@@ -46,7 +46,7 @@ Using the promise pool is pretty straightforward. The package exposes a class an
 Here’s an example using a concurrency of 2:
 
 ```js
-const PromisePool = require('@supercharge/promise-pool')
+const { PromisePool } = require('@supercharge/promise-pool')
 
 const users = [
   { name: 'Marcus' },
@@ -93,6 +93,8 @@ await PromisePool
 You may also stop the pool from within the `.handleError()` method in case you need to:
 
 ```js
+const { PromisePool } = require('@supercharge/promise-pool')
+
 await PromisePool
   .for(users)
   .handleError(async (error, user, pool) => {
@@ -116,6 +118,8 @@ The promise pool allows for custom error handling. You can take over the error h
 Providing a custom error handler allows you to exit the promise pool early by throwing inside the error handler function. Throwing errors is in line with Node.js error handling using async/await.
 
 ```js
+const { PromisePool } = require('@supercharge/promise-pool')
+
 try {
   const errors = []
 
