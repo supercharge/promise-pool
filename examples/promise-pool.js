@@ -1,6 +1,6 @@
 'use strict'
 
-const PromisePool = require('../dist')
+const { PromisePool } = require('../dist')
 
 /**
  * Very basic, non-optimal shuffle function
@@ -33,9 +33,11 @@ async function run () {
       return { item: index, timeout }
     })
 
+  console.log()
   console.log('Results ->')
   console.log(results)
 
+  console.log()
   console.log(`Errors -> ${errors.length ? errors : 'none'}`)
 }
 
