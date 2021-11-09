@@ -2,4 +2,4 @@
 
 import { PromisePool } from './promise-pool'
 
-export = PromisePool
+export { PromisePool }

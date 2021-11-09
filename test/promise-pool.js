@@ -1,7 +1,7 @@
 'use strict'
 
 const expect = require('expect')
-const PromisePool = require('../dist')
+const { PromisePool } = require('../dist')
 const { test } = require('uvu')
 
 const pause = timeout => new Promise(resolve => setTimeout(resolve, timeout))
