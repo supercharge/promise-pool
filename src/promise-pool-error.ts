@@ -5,6 +5,7 @@ export class PromisePoolError<T> extends Error {
    * Returns the item that caused this error.
    */
   public item: T
+  public raw: any;
 
   /**
    * Create a new instance for the given `message` and `item`.
@@ -18,6 +19,7 @@ export class PromisePoolError<T> extends Error {
     this.item = item
     this.name = this.constructor.name
     this.message = this.messageFrom(error)
+    this.raw = error
 
     Error.captureStackTrace(this, this.constructor)
   }
