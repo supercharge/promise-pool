@@ -1,5 +1,30 @@
 # Changelog
 
+## [2.1.0](https://github.com/supercharge/promise-pool/compare/v2.0.0...v2.1.0) - 2021-12-14
+
+### Added
+- keep the original error in `error.raw`
+  - this is useful if your errors store some kind of context
+  - the `PromisePoolError` instance would otherwise loose the original error context
+
+  ```js
+  class CustomError extends Error { … }
+
+  const { errors } = await PromisePool
+    .withConcurrency(2)
+    .for([1, 2, 3])
+    .process(() => {
+      throw new CustomError('Oh no')
+    })
+
+  errors[0].raw instanceof CustomError
+  // true
+  ```
+
+### Updated
+- bump dependencies
+
+
 ## [2.0.0](https://github.com/supercharge/promise-pool/compare/v1.9.0...v2.0.0) - 2021-11-09
 
 ### Breaking Changes
