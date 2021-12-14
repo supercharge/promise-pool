@@ -97,8 +97,8 @@ export class PromisePool<T> {
    *
    * @returns Promise<{ results, errors }>
    */
-  async process<R> (callback: ProcessHandler<T, R>): Promise<ReturnValue<T, R>> {
-    return new PromisePoolExecutor<T, R>()
+  async process<ResultType, ErrorType = any> (callback: ProcessHandler<T, ResultType>): Promise<ReturnValue<T, ResultType, ErrorType>> {
+    return new PromisePoolExecutor<T, ResultType>()
       .withConcurrency(this.concurrency)
       .withHandler(callback)
       .handleError(this.errorHandler)

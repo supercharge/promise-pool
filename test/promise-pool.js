@@ -156,6 +156,31 @@ test('returns errors', async () => {
   expect(errors[0].message).toEqual('Oh no, not a 3.')
 })
 
+test('stores the original error', async () => {
+  class CustomError extends Error {
+    constructor (message, code) {
+      super(message)
+
+      this.code = code
+    }
+  }
+
+  const ids = [1, 2, 3]
+
+  const { errors } = await PromisePool
+    .withConcurrency(2)
+    .for(ids)
+    .process(() => {
+      throw new CustomError('Oh no, not a 3.', 123)
+    })
+
+  expect(errors.length).toEqual(3)
+  errors.forEach(error => {
+    expect(error.raw).toBeInstanceOf(CustomError)
+    expect(error.raw).toBeInstanceOf(CustomError)
+  })
+})
+
 test('keeps processing with when errors occur', async () => {
   const ids = Array.from({ length: 10 }, (_, i) => i + 1)
 

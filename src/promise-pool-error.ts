@@ -1,11 +1,11 @@
 'use strict'
 
-export class PromisePoolError<T> extends Error {
+export class PromisePoolError<T, E = any> extends Error {
   /**
    * Returns the item that caused this error.
    */
   public item: T
-  public raw: any;
+  public raw: E
 
   /**
    * Create a new instance for the given `message` and `item`.
@@ -13,13 +13,13 @@ export class PromisePoolError<T> extends Error {
    * @param error  The original error
    * @param item   The item causing the error
    */
-  constructor (error: any, item: T) {
+  constructor (error: E, item: T) {
     super()
 
+    this.raw = error
     this.item = item
     this.name = this.constructor.name
     this.message = this.messageFrom(error)
-    this.raw = error
 
     Error.captureStackTrace(this, this.constructor)
   }
@@ -32,7 +32,7 @@ export class PromisePoolError<T> extends Error {
    *
    * @returns {PromisePoolError}
    */
-  static createFrom<T>(error: any, item: T): PromisePoolError<T> {
+  static createFrom<T, E = any>(error: E, item: T): PromisePoolError<T> {
     return new this(error, item)
   }
 
