@@ -23,6 +23,7 @@
 
 ### Updated
 - bump dependencies
+- run tests for Node.js v17
 
 
 ## [2.0.0](https://github.com/supercharge/promise-pool/compare/v1.9.0...v2.0.0) - 2021-11-09
