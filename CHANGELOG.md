@@ -7,19 +7,19 @@
   - this is useful if your errors store some kind of context
   - the `PromisePoolError` instance would otherwise loose the original error context
 
-  ```js
-  class CustomError extends Error { … }
+```js
+class CustomError extends Error { … }
 
-  const { errors } = await PromisePool
-    .withConcurrency(2)
-    .for([1, 2, 3])
-    .process(() => {
-      throw new CustomError('Oh no')
-    })
+const { errors } = await PromisePool
+  .withConcurrency(2)
+  .for([1, 2, 3])
+  .process(() => {
+    throw new CustomError('Oh no')
+  })
 
-  errors[0].raw instanceof CustomError
-  // true
-  ```
+errors[0].raw instanceof CustomError
+// true
+```
 
 ### Updated
 - bump dependencies
