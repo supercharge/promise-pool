@@ -37,7 +37,8 @@ npm i @supercharge/promise-pool
 
 
 ## Docs
-Find all the [details and available methods in the extensive Supercharge docs](https://superchargejs.com/docs/promise-pool).
+
+- 📖 [Documentation](https://superchargejs.com/docs/promise-pool)
 
 
 ## Usage
