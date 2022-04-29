@@ -20,14 +20,14 @@ export class PromisePool<T> {
   private errorHandler?: ErrorHandler<T>
 
   /**
-   * The onTaskStarted handler callback function
+   * The `taskStarted` handler callback functions
    */
-  private onTaskStartedHandler?: ProgressHandler<T>
+  private readonly onTaskStartedHandlers: Array<ProgressHandler<T>>
 
   /**
-   * The onTaskFinished handler callback function
+   * The `taskFinished` handler callback functions
    */
-  private onTaskFinishedHandler?: ProgressHandler<T>
+  private readonly onTaskFinishedHandlers: Array<ProgressHandler<T>>
 
   /**
    * Instantiates a new promise pool with a default `concurrency: 10` and `items: []`.
@@ -38,6 +38,8 @@ export class PromisePool<T> {
     this.concurrency = 10
     this.items = items ?? []
     this.errorHandler = undefined
+    this.onTaskStartedHandlers = []
+    this.onTaskFinishedHandlers = []
   }
 
   /**
@@ -100,27 +102,27 @@ export class PromisePool<T> {
   }
 
   /**
-   * Set the callback handler function to execute when an task started.
+   * Assign the given callback `handler` function to run when a task starts.
    *
-   * @param {Function} handler
+   * @param {ProgressHandler<T>} handler
    *
    * @returns {PromisePool}
    */
   onTaskStarted (handler: ProgressHandler<T>): PromisePool<T> {
-    this.onTaskStartedHandler = handler
+    this.onTaskStartedHandlers.push(handler)
 
     return this
   }
 
   /**
-    * Set the callback handler function to execute when an task finished.
+    * Assign the given callback `handler` function to run when a task finished.
     *
-    * @param {Function} handler
+    * @param {ProgressHandler<T>} handler
     *
     * @returns {PromisePool}
     */
   onTaskFinished (handler: ProgressHandler<T>): PromisePool<T> {
-    this.onTaskFinishedHandler = handler
+    this.onTaskFinishedHandlers.push(handler)
 
     return this
   }
@@ -138,8 +140,8 @@ export class PromisePool<T> {
       .withConcurrency(this.concurrency)
       .withHandler(callback)
       .handleError(this.errorHandler)
-      .onTaskStarted(this.onTaskStartedHandler)
-      .onTaskFinished(this.onTaskFinishedHandler)
+      .onTaskStarted(this.onTaskStartedHandlers)
+      .onTaskFinished(this.onTaskFinishedHandlers)
       .for(this.items)
       .start()
   }

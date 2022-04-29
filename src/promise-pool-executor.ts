@@ -65,14 +65,14 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
   private errorHandler?: ErrorHandler<T>
 
   /**
-   * The async handling function.
+   * The `taskStarted` handler callback functions
    */
-  private onTaskStartedHandler?: ProgressHandler<T>
+  private onTaskStartedHandlers: Array<ProgressHandler<T>>
 
   /**
-   * The async handling function.
-   */
-  private onTaskFinishedHandler?: ProgressHandler<T>
+    * The `taskFinished` handler callback functions
+    */
+  private onTaskFinishedHandlers: Array<ProgressHandler<T>>
 
   /**
    * Creates a new promise pool executer instance with a default concurrency of 10.
@@ -91,8 +91,8 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
 
     this.handler = () => {}
     this.errorHandler = undefined
-    this.onTaskFinishedHandler = undefined
-    this.onTaskStartedHandler = undefined
+    this.onTaskStartedHandlers = []
+    this.onTaskFinishedHandlers = []
   }
 
   /**
@@ -217,22 +217,22 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
    *
    * @returns {this}
    */
-  onTaskStarted (handler?: (item: T, percentage: number, activeTasks: any[], finishedTasks: any[], pool: Stoppable) => void): this {
-    this.onTaskStartedHandler = handler
+  onTaskStarted (handlers: Array<ProgressHandler<T>>): this {
+    this.onTaskStartedHandlers = handlers
 
     return this
   }
 
   /**
-   * Set the handler function to execute when finished a task.
+    * Assign the given callback `handler` function to run when a task finished.
    *
-   * @param {Function} handler
+   * @param {ProgressHandler<T>} handlers
    *
    * @returns {this}
    */
 
-  onTaskFinished (handler?: (item: T, percentage: number, activeTasks: any[], finishedTasks: any[], pool: Stoppable) => void): this {
-    this.onTaskFinishedHandler = handler
+  onTaskFinished (handlers: Array<ProgressHandler<T>>): this {
+    this.onTaskFinishedHandlers = handlers
 
     return this
   }
@@ -317,13 +317,17 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
       throw new Error(`The error handler must be a function. Received ${typeof this.errorHandler}`)
     }
 
-    if (this.onTaskFinishedHandler && typeof this.onTaskFinishedHandler !== 'function') {
-      throw new Error(`The error handler must be a function. Received ${typeof this.onTaskFinishedHandler}`)
-    }
+    this.onTaskStartedHandlers.forEach(handler => {
+      if (handler && typeof handler !== 'function') {
+        throw new Error(`The onTaskStarted handler handler must be a function. Received ${typeof handler}`)
+      }
+    })
 
-    if (this.onTaskStartedHandler && typeof this.onTaskStartedHandler !== 'function') {
-      throw new Error(`The error handler must be a function. Received ${typeof this.onTaskStartedHandler}`)
-    }
+    this.onTaskFinishedHandlers.forEach(handler => {
+      if (handler && typeof handler !== 'function') {
+        throw new Error(`The error handler must be a function. Received ${typeof handler}`)
+      }
+    })
 
     return this
   }
@@ -380,11 +384,11 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
           .handleErrorFor(error, item)
       }).finally(() => {
         this.finishedTasks().push(item)
-        this.runOnTaskFinishedHandler(item)
+        this.runOnTaskFinishedHandlers(item)
       })
 
     this.tasks().push(task)
-    this.runOnTaskStartedHandler(item)
+    this.runOnTaskStartedHandlers(item)
   }
 
   /**
@@ -466,17 +470,21 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
   }
 
   /**
-   * Run the Progress changed handler, if available.
+   * Run the onTaskStarted handlers.
    */
-  runOnTaskStartedHandler (item: T): void {
-    this.onTaskStartedHandler?.(item, this.getPercentageProgress(++this.meta.executed), this.tasks(), this.finishedTasks(), this)
+  runOnTaskStartedHandlers (item: T): void {
+    this.onTaskStartedHandlers.forEach(handler => {
+      handler(item, this.getPercentageProgress(++this.meta.executed), this.tasks(), this.finishedTasks(), this)
+    })
   }
 
   /**
-   * Run the Progress changed handler, if available.
+   * Run the onTaskFinished handlers.
    */
-  runOnTaskFinishedHandler (item: T): void {
-    this.onTaskFinishedHandler?.(item, this.getPercentageProgress(this.finishedTasks().length), this.tasks(), this.finishedTasks(), this)
+  runOnTaskFinishedHandlers (item: T): void {
+    this.onTaskFinishedHandlers.forEach(handler => {
+      handler(item, this.getPercentageProgress(this.finishedTasks().length), this.tasks(), this.finishedTasks(), this)
+    })
   }
 
   /**
