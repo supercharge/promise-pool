@@ -369,4 +369,71 @@ test('.process provides an index as the second argument', async () => {
   ])
 })
 
+test('show callback onTaskStarted when a task is executed', async () => {
+  const ids = [1, 2, 3, 4, 5]
+  const concurrency = 1;
+  let startedIds = []
+  let percentageArr = [20, 40, 60, 80, 100]
+
+  await PromisePool
+    .withConcurrency(concurrency)
+    .for(ids)
+    .onTaskStarted((item, percentage, activeTasks, finishedTasks) => {
+      startedIds.push(item)
+      expect(activeTasks.length).toBeLessThanOrEqual(concurrency)
+      expect(percentage).toEqual(percentageArr.shift())
+    })
+    .process(async () => {
+      return await Promise.resolve()
+    })
+
+  expect(ids).toEqual(startedIds)
+})
+
+test('show callback onTaskFinished when a task is finished', async () => {
+  const ids = [1, 2, 3, 4, 5]
+  const concurrency = 2;
+  let finishedIds = []
+  let percentageArr = [20, 40, 60, 80, 100]
+
+  await PromisePool
+    .withConcurrency(concurrency)
+    .for(ids)
+    .onTaskFinished((item, percentage, activeTasks, finishedTasks) => {
+      finishedIds.push(item)
+      expect(finishedIds).toEqual(finishedTasks)
+      expect(activeTasks.length).toBeLessThanOrEqual(concurrency)
+      expect(percentage).toEqual(percentageArr.shift())
+    })
+    .process(async () => {
+      return await Promise.resolve()
+    })
+
+  expect(ids).toEqual(finishedIds)
+})
+
+
+test('checks if callback onTaskStarted and onTaskFinished are called in the same amount', async () => {
+  const ids = [1, 2, 3, 4, 5]
+  const concurrency = 3;
+  let finishedIds = []
+  let startedIds = []
+
+  await PromisePool
+    .withConcurrency(concurrency)
+    .for(ids)
+    .onTaskStarted((item) => {
+      startedIds.push(item)
+    })
+    .onTaskFinished((item) => {
+      finishedIds.push(item)
+    })
+    .process(async () => {
+      return await Promise.resolve()
+    })
+
+  expect(startedIds).toEqual(ids)
+  expect(finishedIds).toEqual(ids)
+})
+
 test.run()

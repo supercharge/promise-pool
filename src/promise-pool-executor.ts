@@ -9,12 +9,19 @@ export type ErrorHandler<T> = (error: Error, item: T, pool: Stoppable) => void |
 
 export type ProcessHandler<T, R> = (item: T, index: number, pool: Stoppable) => R | Promise<R>
 
+export type ProgressHandler<T> = (item: T, percentageProgress: number, activeTasks: any[], finishedTasks: any[], pool: Stoppable) => void
+
 export class PromisePoolExecutor<T, R> implements Stoppable {
   private meta: {
     /**
      * The list of items to process.
      */
     items: T[]
+
+    /**
+     * The list of items has processed.
+     */
+    finishedTasks: T[]
 
     /**
      * The number of concurrently running tasks.
@@ -25,6 +32,11 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
      * Determine whether the pool is stopped.
      */
     stopped: boolean
+
+    /**
+    * Determine whether the pool is stopped.
+    */
+    executed: number
 
     /**
      * The intermediate list of currently running tasks.
@@ -53,6 +65,16 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
   private errorHandler?: ErrorHandler<T>
 
   /**
+   * The async handling function.
+   */
+  private onTaskStartedHandler?: ProgressHandler<T>
+
+  /**
+   * The async handling function.
+   */
+  private onTaskFinishedHandler?: ProgressHandler<T>
+
+  /**
    * Creates a new promise pool executer instance with a default concurrency of 10.
    */
   constructor () {
@@ -62,11 +84,15 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
       errors: [],
       results: [],
       stopped: false,
-      concurrency: 10
+      concurrency: 10,
+      finishedTasks: [],
+      executed: 0
     }
 
     this.handler = () => {}
     this.errorHandler = undefined
+    this.onTaskFinishedHandler = undefined
+    this.onTaskStartedHandler = undefined
   }
 
   /**
@@ -123,6 +149,15 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
   }
 
   /**
+   * Returns the list of processed tasks.
+   *
+   * @returns {Array}
+   */
+  finishedTasks (): any[] {
+    return this.meta.finishedTasks
+  }
+
+  /**
    * Returns the list of results.
    *
    * @returns {R[]}
@@ -171,6 +206,33 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
    */
   handleError (handler?: (error: Error, item: T, pool: Stoppable) => Promise<void> | void): this {
     this.errorHandler = handler
+
+    return this
+  }
+
+  /**
+   * Set the handler function to execute when started a task.
+   *
+   * @param {Function} handler
+   *
+   * @returns {this}
+   */
+  onTaskStarted (handler?: (item: T, percentage: number, activeTasks: any[], finishedTasks: any[], pool: Stoppable) => void): this {
+    this.onTaskStartedHandler = handler
+
+    return this
+  }
+
+  /**
+   * Set the handler function to execute when finished a task.
+   *
+   * @param {Function} handler
+   *
+   * @returns {this}
+   */
+
+  onTaskFinished (handler?: (item: T, percentage: number, activeTasks: any[], finishedTasks: any[], pool: Stoppable) => void): this {
+    this.onTaskFinishedHandler = handler
 
     return this
   }
@@ -255,6 +317,14 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
       throw new Error(`The error handler must be a function. Received ${typeof this.errorHandler}`)
     }
 
+    if (this.onTaskFinishedHandler && typeof this.onTaskFinishedHandler !== 'function') {
+      throw new Error(`The error handler must be a function. Received ${typeof this.onTaskFinishedHandler}`)
+    }
+
+    if (this.onTaskStartedHandler && typeof this.onTaskStartedHandler !== 'function') {
+      throw new Error(`The error handler must be a function. Received ${typeof this.onTaskStartedHandler}`)
+    }
+
     return this
   }
 
@@ -308,9 +378,13 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
         return this
           .removeActive(task)
           .handleErrorFor(error, item)
+      }).finally(() => {
+        this.finishedTasks().push(item)
+        this.runOnTaskFinishedHandler(item)
       })
 
     this.tasks().push(task)
+    this.runOnTaskStartedHandler(item)
   }
 
   /**
@@ -389,6 +463,27 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
     } catch (error: any) {
       this.rethrowIfNotStoppingThePool(error)
     }
+  }
+
+  /**
+   * Run the Progress changed handler, if available.
+   */
+  runOnTaskStartedHandler (item: T): void {
+    this.onTaskStartedHandler?.(item, this.getPercentageProgress(++this.meta.executed), this.tasks(), this.finishedTasks(), this)
+  }
+
+  /**
+   * Run the Progress changed handler, if available.
+   */
+  runOnTaskFinishedHandler (item: T): void {
+    this.onTaskFinishedHandler?.(item, this.getPercentageProgress(this.finishedTasks().length), this.tasks(), this.finishedTasks(), this)
+  }
+
+  /**
+   * Get the percentage progress of tasks that have been completed.
+   */
+  private getPercentageProgress (part: number): number {
+    return Math.round((part / this.items().length) * 100)
   }
 
   /**
