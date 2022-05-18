@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.2.0](https://github.com/supercharge/promise-pool/compare/v2.1.0...v2.2.0) - 2022-xx-xx
+
+### Updated
+- bump dependencies
+
+
 ## [2.1.0](https://github.com/supercharge/promise-pool/compare/v2.0.0...v2.1.0) - 2021-12-14
 
 ### Added

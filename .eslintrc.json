@@ -4,11 +4,8 @@
     "node": true
   },
   "extends": [
-    "standard-with-typescript"
+    "@supercharge/typescript"
   ],
-  "parserOptions": {
-    "project": "./tsconfig.json"
-  },
   "rules": {
     "@typescript-eslint/return-await": 0,
     "@typescript-eslint/require-await": 0,
