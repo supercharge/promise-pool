@@ -1,17 +1,14 @@
 'use strict'
 
-import { Stoppable } from './stoppable'
 import { ReturnValue } from './return-value'
 import { PromisePoolError } from './promise-pool-error'
 import { StopThePromisePoolError } from './stop-the-promise-pool-error'
+import { ErrorHandler, ProcessHandler, OnProgressCallback, Statistics, Stoppable } from './contracts'
 
-export type ErrorHandler<T> = (error: Error, item: T, pool: Stoppable) => void | Promise<void>
-
-export type ProcessHandler<T, R> = (item: T, index: number, pool: Stoppable) => R | Promise<R>
-
-export type ProgressHandler<T> = (item: T, percentageProgress: number, activeTasks: any[], finishedTasks: any[], pool: Stoppable) => void
-
-export class PromisePoolExecutor<T, R> implements Stoppable {
+export class PromisePoolExecutor<T, R> implements Stoppable, Statistics<T> {
+  /**
+   * Stores the internal properties.
+   */
   private meta: {
     /**
      * The list of items to process.
@@ -19,9 +16,9 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
     items: T[]
 
     /**
-     * The list of items has processed.
+     * The list of processed items.
      */
-    finishedTasks: T[]
+    processedItems: T[]
 
     /**
      * The number of concurrently running tasks.
@@ -32,11 +29,6 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
      * Determine whether the pool is stopped.
      */
     stopped: boolean
-
-    /**
-    * Determine whether the pool is stopped.
-    */
-    executed: number
 
     /**
      * The intermediate list of currently running tasks.
@@ -67,12 +59,12 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
   /**
    * The `taskStarted` handler callback functions
    */
-  private onTaskStartedHandlers: Array<ProgressHandler<T>>
+  private onTaskStartedHandlers: Array<OnProgressCallback<T>>
 
   /**
     * The `taskFinished` handler callback functions
     */
-  private onTaskFinishedHandlers: Array<ProgressHandler<T>>
+  private onTaskFinishedHandlers: Array<OnProgressCallback<T>>
 
   /**
    * Creates a new promise pool executer instance with a default concurrency of 10.
@@ -85,8 +77,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
       results: [],
       stopped: false,
       concurrency: 10,
-      finishedTasks: [],
-      executed: 0
+      processedItems: [],
     }
 
     this.handler = () => {}
@@ -140,6 +131,15 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
   }
 
   /**
+   * Returns the number of items to process.
+   *
+   * @returns {Number}
+   */
+  itemsCount (): number {
+    return this.items().length
+  }
+
+  /**
    * Returns the list of active tasks.
    *
    * @returns {Array}
@@ -149,12 +149,37 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
   }
 
   /**
-   * Returns the list of processed tasks.
+   * Returns the number of currently processed tasks.
    *
-   * @returns {Array}
+   * @returns {Number}
    */
-  finishedTasks (): any[] {
-    return this.meta.finishedTasks
+  activeTaskCount (): number {
+    return this.tasks().length
+  }
+
+  /**
+   * Returns the list of processed items.
+   *
+   * @returns {T[]}
+   */
+  processedItems (): T[] {
+    return this.meta.processedItems
+  }
+
+  /**
+   * Returns the number of processed items.
+   *
+   * @returns {Number}
+   */
+  processedCount (): number {
+    return this.processedItems().length
+  }
+
+  /**
+   * Returns the percentage progress of items that have been processed.
+   */
+  processedPercentage (): number {
+    return (this.processedCount() / this.itemsCount()) * 100
   }
 
   /**
@@ -217,7 +242,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
    *
    * @returns {this}
    */
-  onTaskStarted (handlers: Array<ProgressHandler<T>>): this {
+  onTaskStarted (handlers: Array<OnProgressCallback<T>>): this {
     this.onTaskStartedHandlers = handlers
 
     return this
@@ -226,12 +251,12 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
   /**
     * Assign the given callback `handler` function to run when a task finished.
    *
-   * @param {ProgressHandler<T>} handlers
+   * @param {OnProgressCallback<T>} handlers
    *
    * @returns {this}
    */
 
-  onTaskFinished (handlers: Array<ProgressHandler<T>>): this {
+  onTaskFinished (handlers: Array<OnProgressCallback<T>>): this {
     this.onTaskFinishedHandlers = handlers
 
     return this
@@ -319,7 +344,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
 
     this.onTaskStartedHandlers.forEach(handler => {
       if (handler && typeof handler !== 'function') {
-        throw new Error(`The onTaskStarted handler handler must be a function. Received ${typeof handler}`)
+        throw new Error(`The onTaskStarted handler must be a function. Received ${typeof handler}`)
       }
     })
 
@@ -383,7 +408,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
           .removeActive(task)
           .handleErrorFor(error, item)
       }).finally(() => {
-        this.finishedTasks().push(item)
+        this.processedItems().push(item)
         this.runOnTaskFinishedHandlers(item)
       })
 
@@ -432,6 +457,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
   /**
    * Create and save an error for the the given `item`.
    *
+   * @param {Error} error
    * @param {T} item
    */
   async handleErrorFor (error: Error, item: T): Promise<void> {
@@ -474,7 +500,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
    */
   runOnTaskStartedHandlers (item: T): void {
     this.onTaskStartedHandlers.forEach(handler => {
-      handler(item, this.getPercentageProgress(++this.meta.executed), this.tasks(), this.finishedTasks(), this)
+      handler(item, this)
     })
   }
 
@@ -483,15 +509,8 @@ export class PromisePoolExecutor<T, R> implements Stoppable {
    */
   runOnTaskFinishedHandlers (item: T): void {
     this.onTaskFinishedHandlers.forEach(handler => {
-      handler(item, this.getPercentageProgress(this.finishedTasks().length), this.tasks(), this.finishedTasks(), this)
+      handler(item, this)
     })
-  }
-
-  /**
-   * Get the percentage progress of tasks that have been completed.
-   */
-  private getPercentageProgress (part: number): number {
-    return Math.round((part / this.items().length) * 100)
   }
 
   /**
