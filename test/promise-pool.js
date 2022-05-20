@@ -369,19 +369,27 @@ test('.process provides an index as the second argument', async () => {
   ])
 })
 
-test('show callback onTaskStarted when a task is executed', async () => {
+test('fails when not passing a function as an onTaskStarted callback', async () => {
+  const pool = await PromisePool
+    .for([1, 2, 3])
+    .onTaskStarted('non-function')
+
+  await expect(pool.process(() => {})).rejects.toThrow()
+})
+
+test('onTaskStarted is called when a task is about to be processed', async () => {
   const ids = [1, 2, 3, 4, 5]
-  const concurrency = 1;
-  let startedIds = []
-  let percentageArr = [20, 40, 60, 80, 100]
+  const startedIds = []
+  const concurrency = 1
+  const percentageArr = [0, 20, 40, 60, 80]
 
   await PromisePool
     .withConcurrency(concurrency)
     .for(ids)
-    .onTaskStarted((item, percentage, activeTasks, finishedTasks) => {
+    .onTaskStarted((item, pool) => {
       startedIds.push(item)
-      expect(activeTasks.length).toBeLessThanOrEqual(concurrency)
-      expect(percentage).toEqual(percentageArr.shift())
+      expect(pool.activeTaskCount()).toBeLessThanOrEqual(concurrency)
+      expect(pool.processedPercentage()).toEqual(percentageArr.shift())
     })
     .process(async () => {
       return await Promise.resolve()
@@ -390,20 +398,28 @@ test('show callback onTaskStarted when a task is executed', async () => {
   expect(ids).toEqual(startedIds)
 })
 
-test('show callback onTaskFinished when a task is finished', async () => {
+test('fails when not passing a function as an onTaskFinished callback', async () => {
+  const pool = await PromisePool
+    .for([1, 2, 3])
+    .onTaskFinished('non-function')
+
+  await expect(pool.process(() => {})).rejects.toThrow()
+})
+
+test('onTaskFinished is called when a task was processed', async () => {
   const ids = [1, 2, 3, 4, 5]
-  const concurrency = 2;
-  let finishedIds = []
-  let percentageArr = [20, 40, 60, 80, 100]
+  const concurrency = 2
+  const finishedIds = []
+  const percentageArr = [20, 40, 60, 80, 100]
 
   await PromisePool
     .withConcurrency(concurrency)
     .for(ids)
-    .onTaskFinished((item, percentage, activeTasks, finishedTasks) => {
+    .onTaskFinished((item, pool) => {
       finishedIds.push(item)
-      expect(finishedIds).toEqual(finishedTasks)
-      expect(activeTasks.length).toBeLessThanOrEqual(concurrency)
-      expect(percentage).toEqual(percentageArr.shift())
+      expect(finishedIds).toEqual(pool.processedItems())
+      expect(pool.activeTaskCount()).toBeLessThanOrEqual(concurrency)
+      expect(pool.processedPercentage()).toEqual(percentageArr.shift())
     })
     .process(async () => {
       return await Promise.resolve()
@@ -412,12 +428,11 @@ test('show callback onTaskFinished when a task is finished', async () => {
   expect(ids).toEqual(finishedIds)
 })
 
-
-test('checks if callback onTaskStarted and onTaskFinished are called in the same amount', async () => {
+test('onTaskStarted and onTaskFinished are called in the same amount', async () => {
   const ids = [1, 2, 3, 4, 5]
-  const concurrency = 3;
-  let finishedIds = []
-  let startedIds = []
+  const concurrency = 3
+  const finishedIds = []
+  const startedIds = []
 
   await PromisePool
     .withConcurrency(concurrency)
