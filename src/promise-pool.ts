@@ -1,7 +1,8 @@
 'use strict'
 
 import { ReturnValue } from './return-value'
-import { ErrorHandler, ProcessHandler, ProgressHandler, PromisePoolExecutor } from './promise-pool-executor'
+import { PromisePoolExecutor } from './promise-pool-executor'
+import { ErrorHandler, ProcessHandler, OnProgressCallback } from './contracts'
 
 export class PromisePool<T> {
   /**
@@ -22,12 +23,12 @@ export class PromisePool<T> {
   /**
    * The `taskStarted` handler callback functions
    */
-  private readonly onTaskStartedHandlers: Array<ProgressHandler<T>>
+  private readonly onTaskStartedHandlers: Array<OnProgressCallback<T>>
 
   /**
    * The `taskFinished` handler callback functions
    */
-  private readonly onTaskFinishedHandlers: Array<ProgressHandler<T>>
+  private readonly onTaskFinishedHandlers: Array<OnProgressCallback<T>>
 
   /**
    * Instantiates a new promise pool with a default `concurrency: 10` and `items: []`.
@@ -69,7 +70,7 @@ export class PromisePool<T> {
   /**
    * Set the items to be processed in the promise pool.
    *
-   * @param {Array} items
+   * @param {T[]} items
    *
    * @returns {PromisePool}
    */
@@ -80,7 +81,7 @@ export class PromisePool<T> {
   /**
    * Set the items to be processed in the promise pool.
    *
-   * @param {Array} items
+   * @param {T[]} items
    *
    * @returns {PromisePool}
    */
@@ -91,7 +92,7 @@ export class PromisePool<T> {
   /**
    * Set the error handler function to execute when an error occurs.
    *
-   * @param {Function} handler
+   * @param {ErrorHandler<T>} handler
    *
    * @returns {PromisePool}
    */
@@ -104,11 +105,11 @@ export class PromisePool<T> {
   /**
    * Assign the given callback `handler` function to run when a task starts.
    *
-   * @param {ProgressHandler<T>} handler
+   * @param {OnProgressCallback<T>} handler
    *
    * @returns {PromisePool}
    */
-  onTaskStarted (handler: ProgressHandler<T>): PromisePool<T> {
+  onTaskStarted (handler: OnProgressCallback<T>): PromisePool<T> {
     this.onTaskStartedHandlers.push(handler)
 
     return this
@@ -117,11 +118,11 @@ export class PromisePool<T> {
   /**
     * Assign the given callback `handler` function to run when a task finished.
     *
-    * @param {ProgressHandler<T>} handler
+    * @param {OnProgressCallback<T>} handler
     *
     * @returns {PromisePool}
     */
-  onTaskFinished (handler: ProgressHandler<T>): PromisePool<T> {
+  onTaskFinished (handler: OnProgressCallback<T>): PromisePool<T> {
     this.onTaskFinishedHandlers.push(handler)
 
     return this
@@ -131,7 +132,7 @@ export class PromisePool<T> {
    * Starts processing the promise pool by iterating over the items
    * and running each item through the async `callback` function.
    *
-   * @param {Function} The async processing function receiving each item from the `items` array.
+   * @param {ProcessHandler} The async processing function receiving each item from the `items` array.
    *
    * @returns Promise<{ results, errors }>
    */
