@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.2.0](https://github.com/supercharge/promise-pool/compare/v2.1.0...v2.2.0) - 2022-xx-xx
+## [2.2.0](https://github.com/supercharge/promise-pool/compare/v2.1.0...v2.2.0) - 2022-05-xx
+
+### Added
+- `pool.onTaskStarted((item, pool) => { … })`: configure a callback that runs when an item is about to be processed
+- `pool.onTaskFinished((item, pool) => { … })`: configure a callback that runs when an item finished processing
 
 ### Updated
 - bump dependencies

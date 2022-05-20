@@ -153,6 +153,42 @@ try {
 }
 ```
 
+## Callback for Started and Finished Task
+You can receive a callback when any task has started with `.onTaskStarted()` with the `item` has starting this process, with `percentage` of progress the items that has started, `activeTasks` that is processing and `finishedTasks`:
+
+
+```js
+const { PromisePool } = require('@supercharge/promise-pool')
+
+await PromisePool
+  .for(users)
+  .onTaskStarted((item, percentage, activeTasks, finishedTasks) => {
+    console.log(`Progress: ${percentage}%`)
+    console.log(`Active tasks: ${activeTasks.length}`)
+    console.log(`Finished tasks: ${finishedTasks.length}`)
+  })
+  .process(async (user, index, pool) => {
+    // processes the `user` data
+  })
+```
+
+You can also receive callback `.onTaskFinished()`, with parameter `percentage` of progress the items that has finished: 
+
+```js
+const { PromisePool } = require('@supercharge/promise-pool')
+
+await PromisePool
+  .for(users)
+  .onTaskFinished((item, percentage, activeTasks, finishedTasks) => {
+    console.log(`Progress: ${percentage}%`)
+    console.log(`Active tasks: ${activeTasks.length}`)
+    console.log(`Finished tasks: ${finishedTasks.length}`)
+  })
+  .process(async (user, index, pool) => {
+    // processes the `user` data
+  })
+```
+
 
 ## Contributing
 

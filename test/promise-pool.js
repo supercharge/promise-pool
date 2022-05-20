@@ -369,4 +369,86 @@ test('.process provides an index as the second argument', async () => {
   ])
 })
 
+test('fails when not passing a function as an onTaskStarted callback', async () => {
+  const pool = await PromisePool
+    .for([1, 2, 3])
+    .onTaskStarted('non-function')
+
+  await expect(pool.process(() => {})).rejects.toThrow()
+})
+
+test('onTaskStarted is called when a task is about to be processed', async () => {
+  const ids = [1, 2, 3, 4, 5]
+  const startedIds = []
+  const concurrency = 1
+  const percentageArr = [0, 20, 40, 60, 80]
+
+  await PromisePool
+    .withConcurrency(concurrency)
+    .for(ids)
+    .onTaskStarted((item, pool) => {
+      startedIds.push(item)
+      expect(pool.activeTaskCount()).toBeLessThanOrEqual(concurrency)
+      expect(pool.processedPercentage()).toEqual(percentageArr.shift())
+    })
+    .process(async () => {
+      return await Promise.resolve()
+    })
+
+  expect(ids).toEqual(startedIds)
+})
+
+test('fails when not passing a function as an onTaskFinished callback', async () => {
+  const pool = await PromisePool
+    .for([1, 2, 3])
+    .onTaskFinished('non-function')
+
+  await expect(pool.process(() => {})).rejects.toThrow()
+})
+
+test('onTaskFinished is called when a task was processed', async () => {
+  const ids = [1, 2, 3, 4, 5]
+  const concurrency = 2
+  const finishedIds = []
+  const percentageArr = [20, 40, 60, 80, 100]
+
+  await PromisePool
+    .withConcurrency(concurrency)
+    .for(ids)
+    .onTaskFinished((item, pool) => {
+      finishedIds.push(item)
+      expect(finishedIds).toEqual(pool.processedItems())
+      expect(pool.activeTaskCount()).toBeLessThanOrEqual(concurrency)
+      expect(pool.processedPercentage()).toEqual(percentageArr.shift())
+    })
+    .process(async () => {
+      return await Promise.resolve()
+    })
+
+  expect(ids).toEqual(finishedIds)
+})
+
+test('onTaskStarted and onTaskFinished are called in the same amount', async () => {
+  const ids = [1, 2, 3, 4, 5]
+  const concurrency = 3
+  const finishedIds = []
+  const startedIds = []
+
+  await PromisePool
+    .withConcurrency(concurrency)
+    .for(ids)
+    .onTaskStarted((item) => {
+      startedIds.push(item)
+    })
+    .onTaskFinished((item) => {
+      finishedIds.push(item)
+    })
+    .process(async () => {
+      return await Promise.resolve()
+    })
+
+  expect(startedIds).toEqual(ids)
+  expect(finishedIds).toEqual(ids)
+})
+
 test.run()
