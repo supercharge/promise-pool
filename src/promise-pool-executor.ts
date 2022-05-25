@@ -149,11 +149,22 @@ export class PromisePoolExecutor<T, R> implements Stoppable, Statistics<T> {
   }
 
   /**
-   * Returns the number of currently processed tasks.
+   * Returns the number of currently active tasks.
+   *
+   * @returns {Number}
+   *
+   * @deprecated use the `activeTasksCount()` method (plural naming) instead
+   */
+  activeTaskCount (): number {
+    return this.activeTasksCount()
+  }
+
+  /**
+   * Returns the number of currently active tasks.
    *
    * @returns {Number}
    */
-  activeTaskCount (): number {
+  activeTasksCount (): number {
     return this.tasks().length
   }
 
@@ -268,16 +279,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable, Statistics<T> {
    * @returns {Boolean}
    */
   hasReachedConcurrencyLimit (): boolean {
-    return this.activeTasks() >= this.concurrency()
-  }
-
-  /**
-   * Returns the number of active tasks.
-   *
-   * @returns {Number}
-   */
-  activeTasks (): number {
-    return this.meta.tasks.length
+    return this.activeTasksCount() >= this.concurrency()
   }
 
   /**

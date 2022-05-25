@@ -15,9 +15,16 @@ export interface Stoppable {
 
 export interface Statistics<T> {
   /**
-   * Returns the number of currently processed tasks.
+   * Returns the number of currently active tasks.
+   *
+   * @deprecated use the `activeTasksCount()` method (plural naming) instead
    */
   activeTaskCount (): number
+
+  /**
+   * Returns the number of currently active tasks.
+   */
+  activeTasksCount (): number
 
   /**
    * Returns the list of processed items.
