@@ -345,7 +345,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    */
   validateInputs (): this {
     if (typeof this.handler !== 'function') {
-      throw new Error('The first parameter for the .process(fn) method must be a function')
+      throw ValidationError.createFrom('The first parameter for the .process(fn) method must be a function')
     }
 
     if (!Array.isArray(this.items())) {
@@ -353,18 +353,18 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     }
 
     if (this.errorHandler && typeof this.errorHandler !== 'function') {
-      throw new Error(`The error handler must be a function. Received ${typeof this.errorHandler}`)
+      throw ValidationError.createFrom(`The error handler must be a function. Received ${typeof this.errorHandler}`)
     }
 
     this.onTaskStartedHandlers.forEach(handler => {
       if (handler && typeof handler !== 'function') {
-        throw new Error(`The onTaskStarted handler must be a function. Received ${typeof handler}`)
+        throw ValidationError.createFrom(`The onTaskStarted handler must be a function. Received ${typeof handler}`)
       }
     })
 
     this.onTaskFinishedHandlers.forEach(handler => {
       if (handler && typeof handler !== 'function') {
-        throw new Error(`The error handler must be a function. Received ${typeof handler}`)
+        throw ValidationError.createFrom(`The error handler must be a function. Received ${typeof handler}`)
       }
     })
 
