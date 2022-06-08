@@ -3,9 +3,10 @@
 import { ReturnValue } from './return-value'
 import { PromisePoolError } from './promise-pool-error'
 import { StopThePromisePoolError } from './stop-the-promise-pool-error'
-import { ErrorHandler, ProcessHandler, OnProgressCallback, Statistics, Stoppable } from './contracts'
+import { ErrorHandler, ProcessHandler, OnProgressCallback, Statistics, Stoppable, UsesConcurrency } from './contracts'
+import { ValidationError } from './validation-error'
 
-export class PromisePoolExecutor<T, R> implements Stoppable, Statistics<T> {
+export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, Statistics<T> {
   /**
    * Stores the internal properties.
    */
@@ -49,7 +50,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable, Statistics<T> {
   /**
    * The async processing function receiving each item from the `items` array.
    */
-  private handler: (item: T, index: number, pool: Stoppable) => any
+  private handler: (item: T, index: number, pool: Stoppable & UsesConcurrency) => any
 
   /**
    * The async error handling function.
@@ -93,10 +94,25 @@ export class PromisePoolExecutor<T, R> implements Stoppable, Statistics<T> {
    *
    * @returns {PromisePoolExecutor}
    */
-  withConcurrency (concurrency: number): this {
+  useConcurrency (concurrency: number): this {
+    if (!this.isValidConcurrency(concurrency)) {
+      throw ValidationError.createFrom(`"concurrency" must be a number, 1 or up. Received "${concurrency}" (${typeof concurrency})`)
+    }
+
     this.meta.concurrency = concurrency
 
     return this
+  }
+
+  /**
+   * Determine whether the given `concurrency` value is valid.
+   *
+   * @param {Number} concurrency
+   *
+   * @returns {Boolean}
+   */
+  private isValidConcurrency (concurrency: number): boolean {
+    return typeof concurrency === 'number' && concurrency >= 1
   }
 
   /**
@@ -240,7 +256,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable, Statistics<T> {
    *
    * @returns {PromisePoolExecutor}
    */
-  handleError (handler?: (error: Error, item: T, pool: Stoppable) => Promise<void> | void): this {
+  handleError (handler?: (error: Error, item: T, pool: Stoppable & UsesConcurrency) => Promise<void> | void): this {
     this.errorHandler = handler
 
     return this
@@ -332,12 +348,8 @@ export class PromisePoolExecutor<T, R> implements Stoppable, Statistics<T> {
       throw new Error('The first parameter for the .process(fn) method must be a function')
     }
 
-    if (!(typeof this.concurrency() === 'number' && this.concurrency() >= 1)) {
-      throw new TypeError(`"concurrency" must be a number, 1 or up. Received "${this.concurrency()}" (${typeof this.concurrency()})`)
-    }
-
     if (!Array.isArray(this.items())) {
-      throw new TypeError(`"items" must be an array. Received ${typeof this.items()}`)
+      throw ValidationError.createFrom(`"items" must be an array. Received ${typeof this.items()}`)
     }
 
     if (this.errorHandler && typeof this.errorHandler !== 'function') {
@@ -373,10 +385,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable, Statistics<T> {
         break
       }
 
-      if (this.hasReachedConcurrencyLimit()) {
-        await this.waitForTaskToFinish()
-      }
-
+      await this.waitForProcessingSlot()
       this.startProcessing(item, index)
     }
 
@@ -386,10 +395,12 @@ export class PromisePoolExecutor<T, R> implements Stoppable, Statistics<T> {
   /**
    * Wait for one of the active tasks to finish processing.
    */
-  async waitForTaskToFinish (): Promise<void> {
-    await Promise.race(
-      this.tasks()
-    )
+  async waitForProcessingSlot (): Promise<void> {
+    while (this.hasReachedConcurrencyLimit()) {
+      await Promise.race(
+        this.tasks()
+      )
+    }
   }
 
   /**
@@ -463,8 +474,13 @@ export class PromisePoolExecutor<T, R> implements Stoppable, Statistics<T> {
    * @param {T} item
    */
   async handleErrorFor (error: Error, item: T): Promise<void> {
-    if (this.isStoppingThePool(error)) {
+    if (this.isStoppingThePoolError(error)) {
       return
+    }
+
+    if (this.isValidationError(error)) {
+      this.markAsStopped()
+      throw error
     }
 
     return this.hasErrorHandler()
@@ -479,8 +495,19 @@ export class PromisePoolExecutor<T, R> implements Stoppable, Statistics<T> {
    *
    * @returns {Boolean}
    */
-  isStoppingThePool (error: Error): boolean {
+  isStoppingThePoolError (error: Error): boolean {
     return error instanceof StopThePromisePoolError
+  }
+
+  /**
+   * Determine whether the given `error` is a `ValidationError` instance.
+   *
+   * @param {Error} error
+   *
+   * @returns {Boolean}
+   */
+  isValidationError (error: Error): boolean {
+    return error instanceof ValidationError
   }
 
   /**
@@ -521,7 +548,7 @@ export class PromisePoolExecutor<T, R> implements Stoppable, Statistics<T> {
    * @param {Error} error
    */
   rethrowIfNotStoppingThePool (error: Error): void {
-    if (this.isStoppingThePool(error)) {
+    if (this.isStoppingThePoolError(error)) {
       return
     }
 

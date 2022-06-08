@@ -2,7 +2,7 @@
 
 const { test } = require('uvu')
 const { expect } = require('expect')
-const { PromisePool } = require('../dist')
+const { PromisePool, ValidationError } = require('../dist')
 
 const pause = timeout => new Promise(resolve => setTimeout(resolve, timeout))
 
@@ -51,16 +51,16 @@ test('ensures concurrency is a number', async () => {
   expect(await pool.withConcurrency(1).process(fn)).toEqual({ errors: [], results: [] })
   expect(await pool.withConcurrency(Infinity).process(fn)).toEqual({ errors: [], results: [] })
 
-  await expect(pool.withConcurrency(0).process(fn)).rejects.toThrow(TypeError)
-  await expect(pool.withConcurrency(-1).process(fn)).rejects.toThrow(TypeError)
-  await expect(pool.withConcurrency(null).process(fn)).rejects.toThrow(TypeError)
+  await expect(pool.withConcurrency(0).process(fn)).rejects.toThrow(ValidationError)
+  await expect(pool.withConcurrency(-1).process(fn)).rejects.toThrow(ValidationError)
+  await expect(pool.withConcurrency(null).process(fn)).rejects.toThrow(ValidationError)
 })
 
 test('ensures the items are an array', async () => {
   const pool = new PromisePool()
   const fn = () => {}
 
-  await expect(pool.for('non-array').process(fn)).rejects.toThrow(TypeError)
+  await expect(pool.for('non-array').process(fn)).rejects.toThrow(ValidationError)
   await expect(await pool.for([]).process(fn)).toEqual({ errors: [], results: [] })
 })
 
@@ -449,6 +449,46 @@ test('onTaskStarted and onTaskFinished are called in the same amount', async () 
 
   expect(startedIds).toEqual(ids)
   expect(finishedIds).toEqual(ids)
+})
+
+test('can change the concurrency while the pool is running', async () => {
+  const concurrency = 3
+  const timeouts = [10, 20, 30, 40, 50]
+
+  const start = Date.now()
+
+  await PromisePool
+    .withConcurrency(concurrency)
+    .for(timeouts)
+    .process(async (timeout, _, pool) => {
+      if (timeout >= 30) {
+        pool.useConcurrency(1)
+      }
+
+      await pause(timeout)
+    })
+
+  const elapsed = Date.now() - start
+
+  expect(elapsed).toBeGreaterThanOrEqual(30 + 40 + 50)
+  expect(elapsed).toBeLessThanOrEqual(30 + 40 + 50 + 5) // + 5 is a leeway for the pool overhead
+})
+
+test('fails to change the concurrency for a running pool to an invalid value', async () => {
+  const timeouts = [100, 200, 300, 400, 500]
+
+  await expect(
+    PromisePool
+      .withConcurrency(3)
+      .for(timeouts)
+      .process(async (timeout, _, pool) => {
+        if (timeout >= 300) {
+          pool.useConcurrency(-1)
+        }
+
+        await pause(timeout)
+      })
+  ).rejects.toThrow(ValidationError)
 })
 
 test.run()

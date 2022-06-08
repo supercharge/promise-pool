@@ -1,5 +1,17 @@
 'use strict'
 
+export interface UsesConcurrency {
+  /**
+   * Assign the given `concurrency` as the number of tasks being processed concurrently the promise pool.
+   */
+  useConcurrency (concurrency: number): this
+
+  /**
+   * Returns the number of concurrently processed tasks.
+   */
+  concurrency (): number
+}
+
 export interface Stoppable {
   /**
    * Stop the promise pool and returns any results that already have been calculated.
@@ -42,8 +54,8 @@ export interface Statistics<T> {
   processedPercentage (): number
 }
 
-export type ErrorHandler<T> = (error: Error, item: T, pool: Stoppable) => void | Promise<void>
+export type ErrorHandler<T> = (error: Error, item: T, pool: Stoppable & UsesConcurrency) => void | Promise<void>
 
-export type ProcessHandler<T, R> = (item: T, index: number, pool: Stoppable) => R | Promise<R>
+export type ProcessHandler<T, R> = (item: T, index: number, pool: Stoppable & UsesConcurrency) => R | Promise<R>
 
-export type OnProgressCallback<T> = (item: T, pool: Stoppable & Statistics<T>) => void
+export type OnProgressCallback<T> = (item: T, pool: Stoppable & Statistics<T> & UsesConcurrency) => void
