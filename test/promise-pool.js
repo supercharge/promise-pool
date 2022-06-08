@@ -451,7 +451,7 @@ test('onTaskStarted and onTaskFinished are called in the same amount', async () 
   expect(finishedIds).toEqual(ids)
 })
 
-test('can change the concurrency while the pool is running', async () => {
+test('can decrease the concurrency while the pool is running', async () => {
   const concurrency = 3
   const timeouts = [10, 20, 30, 40, 50]
 
@@ -471,7 +471,36 @@ test('can change the concurrency while the pool is running', async () => {
   const elapsed = Date.now() - start
 
   expect(elapsed).toBeGreaterThanOrEqual(30 + 40 + 50)
-  expect(elapsed).toBeLessThanOrEqual(30 + 40 + 50 + 5) // + 5 is a leeway for the pool overhead
+  expect(elapsed).toBeLessThanOrEqual(30 + 40 + 50 + 8) // +8 is a leeway for the pool overhead
+})
+
+test('can increase the concurrency while the pool is running', async () => {
+  const concurrency = 1
+  const timeouts = [10, 20, 30, 40, 50]
+
+  const start = Date.now()
+
+  await PromisePool
+    .withConcurrency(concurrency)
+    .for(timeouts)
+    .process(async (timeout, _, pool) => {
+      if (timeout >= 30) {
+        pool.useConcurrency(3)
+      }
+
+      await pause(timeout)
+    })
+
+  const elapsed = Date.now() - start
+
+  /**
+   * 1. the first two items run in sequence: 10ms + 20ms
+   * 2. we’re changing the concurrency when hitting the third item
+   * 3. the changed concurrency results in processing the remainin items in parallel
+   * 4. processing the items 30,40,50 in parallel has the longest timeout is the limit
+   */
+  expect(elapsed).toBeGreaterThanOrEqual(10 + 20 + 50)
+  expect(elapsed).toBeLessThanOrEqual(10 + 20 + 50 + 8) // +8 is a leeway for the pool overhead
 })
 
 test('fails to change the concurrency for a running pool to an invalid value', async () => {
