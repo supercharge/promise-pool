@@ -154,7 +154,7 @@ try {
 ```
 
 ## Callback for Started and Finished Task
-You can receive a callback when any task has started with `.onTaskStarted()` with the `item` has starting this process, with `percentage` of progress the items that has started, `activeTasks` that is processing and `finishedTasks`:
+You can receive a callback when any task has started with `.onTaskStarted()` with the `item` has starting this process, with `pool` following:
 
 
 ```js
@@ -162,10 +162,12 @@ const { PromisePool } = require('@supercharge/promise-pool')
 
 await PromisePool
   .for(users)
-  .onTaskStarted((item, percentage, activeTasks, finishedTasks) => {
-    console.log(`Progress: ${percentage}%`)
-    console.log(`Active tasks: ${activeTasks.length}`)
-    console.log(`Finished tasks: ${finishedTasks.length}`)
+  .onTaskStarted((item, pool) => {
+    console.log(`Progress: ${pool.processedPercentage()}%`)
+    console.log(`Active tasks: ${pool.processedItems().length}`)
+    console.log(`Active tasks: ${pool.activeTasksCount()}`);
+    console.log(`Finished tasks: ${pool.processedItems().length}`)
+    console.log(`Finished tasks: ${pool.processedCount()}`)
   })
   .process(async (user, index, pool) => {
     // processes the `user` data
@@ -179,10 +181,12 @@ const { PromisePool } = require('@supercharge/promise-pool')
 
 await PromisePool
   .for(users)
-  .onTaskFinished((item, percentage, activeTasks, finishedTasks) => {
-    console.log(`Progress: ${percentage}%`)
-    console.log(`Active tasks: ${activeTasks.length}`)
-    console.log(`Finished tasks: ${finishedTasks.length}`)
+  .onTaskFinished((item, pool) => {
+    console.log(`Progress: ${pool.processedPercentage()}%`)
+    console.log(`Active tasks: ${pool.processedItems().length}`)
+    console.log(`Active tasks: ${pool.activeTasksCount()}`);
+    console.log(`Finished tasks: ${pool.processedItems().length}`)
+    console.log(`Finished tasks: ${pool.processedCount()}`)
   })
   .process(async (user, index, pool) => {
     // processes the `user` data
