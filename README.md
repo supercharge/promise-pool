@@ -153,8 +153,8 @@ try {
 }
 ```
 
-## Callback for Started and Finished Task
-You can receive a callback when any task has started with `.onTaskStarted()` with the `item` has starting this process, with `pool` following:
+## Callback for Started and Finished Tasks
+You can use the `onTaskStarted` and `onTaskFinished` methods to hook into the processing of tasks. The provided callback for each method will be called when a task started/finished processing:
 
 
 ```js
@@ -169,25 +169,25 @@ await PromisePool
     console.log(`Finished tasks: ${pool.processedItems().length}`)
     console.log(`Finished tasks: ${pool.processedCount()}`)
   })
+  .onTaskFinished((item, pool) => {
+    // update a progress bar or something else :)
+  })
   .process(async (user, index, pool) => {
     // processes the `user` data
   })
 ```
 
-You can also receive callback `.onTaskFinished()`, with parameter `percentage` of progress the items that has finished: 
+You can also chain multiple `onTaskStarted` and `onTaskFinished` handling (in case you want to separate some functionality):
 
 ```js
 const { PromisePool } = require('@supercharge/promise-pool')
 
 await PromisePool
   .for(users)
-  .onTaskFinished((item, pool) => {
-    console.log(`Progress: ${pool.processedPercentage()}%`)
-    console.log(`Active tasks: ${pool.processedItems().length}`)
-    console.log(`Active tasks: ${pool.activeTasksCount()}`);
-    console.log(`Finished tasks: ${pool.processedItems().length}`)
-    console.log(`Finished tasks: ${pool.processedCount()}`)
-  })
+  .onTaskStarted(() => {})
+  .onTaskStarted(() => {})
+  .onTaskFinished(() => {})
+  .onTaskFinished(() => {})
   .process(async (user, index, pool) => {
     // processes the `user` data
   })
