@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.3.1](https://github.com/supercharge/promise-pool/compare/v2.3.0...v2.3.1) - 2022-08-05
+
+### Updated
+- bump dependencies
+
+### Fixed
+- stop processing items after throwing an error from inside the `pool.handleError()` method [#51](https://github.com/supercharge/promise-pool/issues/51)
+
+
 ## [2.3.0](https://github.com/supercharge/promise-pool/compare/v2.2.0...v2.3.0) - 2022-06-08
 
 ### Added
