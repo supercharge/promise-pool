@@ -417,15 +417,13 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   startProcessing (item: T, index: number): void {
     const task: Promise<void> = this.createTaskFor(item, index)
       .then(result => {
-        this
-          .removeActive(task)
-          .save(result)
+        this.save(result).removeActive(task)
       })
       .catch(async error => {
-        return this
-          .removeActive(task)
-          .handleErrorFor(error, item)
-      }).finally(() => {
+        await this.handleErrorFor(error, item)
+        this.removeActive(task)
+      })
+      .finally(() => {
         this.processedItems().push(item)
         this.runOnTaskFinishedHandlers(item)
       })
@@ -443,9 +441,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    * @returns {*}
    */
   async createTaskFor (item: T, index: number): Promise<any> {
-    return Promise.resolve(
-      this.handler(item, index, this)
-    )
+    return this.handler(item, index, this)
   }
 
   /**
@@ -525,7 +521,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    */
   async runErrorHandlerFor (processingError: Error, item: T): Promise<void> {
     try {
-      return await this.errorHandler?.(processingError, item, this)
+      await this.errorHandler?.(processingError, item, this)
     } catch (error: any) {
       this.rethrowIfNotStoppingThePool(error)
     }
