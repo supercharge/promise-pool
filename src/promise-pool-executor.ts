@@ -438,7 +438,9 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    * @returns {*}
    */
   async createTaskFor (item: T, index: number): Promise<any> {
-    return this.handler(item, index, this)
+    return Promise.resolve(
+      this.handler(item, index, this)
+    )
   }
 
   /**
