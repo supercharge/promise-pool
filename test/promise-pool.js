@@ -4,7 +4,11 @@ const { test } = require('uvu')
 const { expect } = require('expect')
 const { PromisePool, ValidationError } = require('../dist')
 
-const pause = timeout => new Promise(resolve => setTimeout(resolve, timeout))
+async function pause (timeout) {
+  return new Promise(resolve => {
+    setTimeout(resolve, timeout)
+  })
+}
 
 test('creates a new PromisePool', async () => {
   const pool = new PromisePool()
@@ -269,41 +273,33 @@ test('should allow custom processing on a specific error', async () => {
 })
 
 test('rethrowing an error from the error handler should stop promise pool immediately when using an async processing function', async () => {
-  const ids = Array.from(Array(20).keys())
-
-  await expect(PromisePool
-    .withConcurrency(2)
-    .for(ids)
-    .handleError(error => {
-      throw error
-    })
-    .process(async item => {
-      if (item === 4) {
-        throw new RangeError('Oh no, too large')
-      }
-
-      await pause(1)
-
-      return item
-    })).rejects.toThrowError(RangeError)
+  await expect(
+    PromisePool
+      .for(new Array(10))
+      .withConcurrency(2)
+      .handleError(async error => {
+        throw error
+      })
+      .process(async (_item, index) => {
+        if (index === 4) {
+          throw new RangeError('Oh no, too large')
+        }
+      })
+  ).rejects.toThrowError(RangeError)
 })
 
 test('rethrowing an error from the error handler should stop promise pool immediately when using a sync processing function', async () => {
-  const ids = Array.from(Array(20).keys())
-
   await expect(
     PromisePool
+      .for(new Array(100))
       .withConcurrency(2)
-      .for(ids)
       .handleError(error => {
         throw error
       })
-      .process(item => {
-        if (item === 4) {
+      .process((_item, index) => {
+        if (index === 4) {
           throw new RangeError('Oh no, too large')
         }
-
-        return item
       })
   ).rejects.toThrowError(RangeError)
 })
