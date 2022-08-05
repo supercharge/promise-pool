@@ -396,6 +396,11 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    * Wait for one of the active tasks to finish processing.
    */
   async waitForProcessingSlot (): Promise<void> {
+    /**
+     * We’re using a while loop here because it’s possible to decrease the pool’s
+     * concurrency at runtime. We need to wait for as many tasks as needed to
+     * finish processing before moving on to process the remaining tasks.
+     */
     while (this.hasReachedConcurrencyLimit()) {
       await Promise.race(
         this.tasks()
@@ -485,7 +490,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
       throw error
     }
 
-    return this.hasErrorHandler()
+    this.hasErrorHandler()
       ? await this.runErrorHandlerFor(error, item)
       : this.saveErrorFor(error, item)
   }
