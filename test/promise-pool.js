@@ -268,8 +268,8 @@ test('should allow custom processing on a specific error', async () => {
   expect(calledError).toBeInstanceOf(RangeError)
 })
 
-test('rethrowing an error from the error handler should stop promise pool immediately', async () => {
-  const ids = [1, 2, 3, 4]
+test('rethrowing an error from the error handler should stop promise pool immediately when using an async processing function', async () => {
+  const ids = Array.from(Array(20).keys())
 
   await expect(PromisePool
     .withConcurrency(2)
@@ -277,11 +277,35 @@ test('rethrowing an error from the error handler should stop promise pool immedi
     .handleError(error => {
       throw error
     })
-    .process(id => {
-      if (id === 4) throw new RangeError('Oh no, too large')
+    .process(async item => {
+      if (item === 4) {
+        throw new RangeError('Oh no, too large')
+      }
 
-      return id
+      await pause(1)
+
+      return item
     })).rejects.toThrowError(RangeError)
+})
+
+test('rethrowing an error from the error handler should stop promise pool immediately when using a sync processing function', async () => {
+  const ids = Array.from(Array(20).keys())
+
+  await expect(
+    PromisePool
+      .withConcurrency(2)
+      .for(ids)
+      .handleError(error => {
+        throw error
+      })
+      .process(item => {
+        if (item === 4) {
+          throw new RangeError('Oh no, too large')
+        }
+
+        return item
+      })
+  ).rejects.toThrowError(RangeError)
 })
 
 test('fails without error', async () => {
