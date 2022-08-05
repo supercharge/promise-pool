@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.2](https://github.com/supercharge/promise-pool/compare/v2.3.1...v2.3.2) - 2022-08-05
+
+### Fixed
+- remove active task after handling the result or error [#51](https://github.com/supercharge/promise-pool/issues/51)
+  - we previously removed the active tasks before handling the result or error, which caused the pool to pick up the next task too early
+
+
 ## [2.3.1](https://github.com/supercharge/promise-pool/compare/v2.3.0...v2.3.1) - 2022-08-05
 
 ### Updated
