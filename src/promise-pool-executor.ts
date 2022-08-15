@@ -27,6 +27,11 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     concurrency: number
 
     /**
+     * The item handler timeout in ms.
+     */
+    timeout: number
+
+    /**
      * Determine whether the pool is stopped.
      */
     stopped: boolean
@@ -79,6 +84,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
       stopped: false,
       concurrency: 10,
       processedItems: [],
+      timeout: 0
     }
 
     this.handler = () => {}
@@ -116,12 +122,34 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   }
 
   /**
+   * Set the timeout in ms for the pool handler
+   *
+   * @param {Number} timeout
+   *
+   * @returns {PromisePool}
+   */
+  withTimeout (timeout: number): this {
+    this.meta.timeout = timeout
+
+    return this
+  }
+
+  /**
    * Returns the number of concurrently processed tasks.
    *
    * @returns {Number}
    */
   concurrency (): number {
     return this.meta.concurrency
+  }
+
+  /**
+   * Returns the timeout in ms.
+   *
+   * @returns {Number}
+   */
+  timeout (): number {
+    return this.meta.timeout
   }
 
   /**
@@ -348,6 +376,10 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
       throw ValidationError.createFrom('The first parameter for the .process(fn) method must be a function')
     }
 
+    if (!(typeof this.timeout() === 'number' && this.timeout() >= 0)) {
+      throw ValidationError.createFrom(`"timeout" must be a number, 0 or up. Received "${this.timeout()}" (${typeof this.timeout()})`)
+    }
+
     if (!Array.isArray(this.items())) {
       throw ValidationError.createFrom(`"items" must be an array. Received ${typeof this.items()}`)
     }
@@ -441,7 +473,18 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    * @returns {*}
    */
   async createTaskFor (item: T, index: number): Promise<any> {
-    return this.handler(item, index, this)
+    if (this.timeout() === 0) {
+      return this.handler(item, index, this)
+    }
+    return Promise.race([
+      this.handler(item, index, this),
+
+      new Promise<void>((_resolve, reject) => {
+        setTimeout(() => {
+          reject(new PromisePoolError(`Promise in pool timed out after ${this.timeout()}ms`, item))
+        }, this.timeout())
+      })
+    ])
   }
 
   /**
