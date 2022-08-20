@@ -39,7 +39,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     /**
      * The list of results.
      */
-    readonly results: R[]
+    results: R[]
 
     /**
      * The list of errors.
@@ -133,6 +133,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    */
   for (items: T[]): this {
     this.meta.items = items
+    this.meta.results = Array(items.length).fill(undefined)
 
     return this
   }
@@ -417,7 +418,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   startProcessing (item: T, index: number): void {
     const task: Promise<void> = this.createTaskFor(item, index)
       .then(result => {
-        this.save(result).removeActive(task)
+        this.save(result, index).removeActive(task)
       })
       .catch(async error => {
         await this.handleErrorFor(error, item)
@@ -448,11 +449,12 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    * Save the given calculation `result`.
    *
    * @param {*} result
+   * @param {number} index
    *
    * @returns {PromisePoolExecutor}
    */
-  save (result: any): this {
-    this.results().push(result)
+  save (result: any, index: number): this {
+    this.results()[index] = result
 
     return this
   }

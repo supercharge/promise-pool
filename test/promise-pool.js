@@ -86,7 +86,7 @@ test('concurrency: 2', async () => {
     })
 
   expect(errors).toEqual([])
-  expect(results).toEqual([100, 200, 400, 100, 300])
+  expect(results).toEqual([400, 100, 200, 300, 100])
 
   const elapsed = Date.now() - start
 
@@ -116,7 +116,7 @@ test('ensures concurrency', async () => {
       return timeout
     })
 
-  expect(results).toEqual([20, 30, 10, 10, 10, 100, 50])
+  expect(results).toEqual([100, 20, 30, 10, 10, 10, 50])
 
   const elapsed = Date.now() - start
 
@@ -152,7 +152,7 @@ test('returns errors', async () => {
       return id
     })
 
-  expect(results).toEqual([1, 2, 4])
+  expect(results).toEqual([1, 2, undefined, 4])
 
   expect(errors.length).toEqual(1)
   expect(errors[0].item).toEqual(3)
@@ -203,7 +203,7 @@ test('keeps processing with when errors occur', async () => {
       return id
     })
 
-  expect(results).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10])
+  expect(results).toEqual([undefined, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 
   expect(errors.length).toEqual(1)
   expect(
@@ -245,7 +245,7 @@ test('should handle error and continue processing', async () => {
     })
 
   expect(errors).toEqual([])
-  expect(results).toEqual([1, 2, 4])
+  expect(results).toEqual([1, 2, undefined, 4])
   expect(collectedItemsOnError).toEqual([3])
 })
 
@@ -538,6 +538,17 @@ test('fails to change the concurrency for a running pool to an invalid value', a
         await pause(timeout)
       })
   ).rejects.toThrow(ValidationError)
+})
+
+test('the order of results matches the order of inputs', async () => {
+  const timeouts = [20, 10]
+  const { results } = await PromisePool
+    .for(timeouts)
+    .process(async timeout => {
+      await pause(timeout)
+      return timeout
+    })
+  expect(results).toEqual([20, 10])
 })
 
 test.run()

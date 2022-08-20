@@ -80,7 +80,7 @@ test('stops the pool from async error handler', async () => {
       return timeout
     })
 
-  expect(results).toEqual([30])
+  expect(results).toEqual([undefined, undefined, 30, undefined, undefined])
 })
 
 test.run()
