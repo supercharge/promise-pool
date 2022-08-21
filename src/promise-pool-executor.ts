@@ -39,7 +39,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     /**
      * The list of results.
      */
-    results: R[]
+    readonly results: R[]
 
     /**
      * The list of errors.
@@ -133,7 +133,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    */
   for (items: T[]): this {
     this.meta.items = items
-    this.meta.results = Array(items.length).fill(undefined)
+    this.meta.results.splice(0, 0, ...Array(items.length).fill(undefined))
 
     return this
   }
