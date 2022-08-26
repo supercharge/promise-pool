@@ -15,6 +15,8 @@ export class PromisePool<T> {
    */
   private concurrency: number
 
+  private shouldResultsCorrespond: boolean
+
   /**
    * The error handler callback function
    */
@@ -30,6 +32,8 @@ export class PromisePool<T> {
    */
   private readonly onTaskFinishedHandlers: Array<OnProgressCallback<T>>
 
+  public static readonly rejected: Symbol = Symbol('rejected')
+
   /**
    * Instantiates a new promise pool with a default `concurrency: 10` and `items: []`.
    *
@@ -37,6 +41,7 @@ export class PromisePool<T> {
    */
   constructor (items?: T[]) {
     this.concurrency = 10
+    this.shouldResultsCorrespond = false
     this.items = items ?? []
     this.errorHandler = undefined
     this.onTaskStartedHandlers = []
@@ -128,6 +133,12 @@ export class PromisePool<T> {
     return this
   }
 
+  useCorrespondingResults (): PromisePool<T> {
+    this.shouldResultsCorrespond = true
+
+    return this
+  }
+
   /**
    * Starts processing the promise pool by iterating over the items
    * and running each item through the async `callback` function.
@@ -139,6 +150,7 @@ export class PromisePool<T> {
   async process<ResultType, ErrorType = any> (callback: ProcessHandler<T, ResultType>): Promise<ReturnValue<T, ResultType, ErrorType>> {
     return new PromisePoolExecutor<T, ResultType>()
       .useConcurrency(this.concurrency)
+      .useCorrespondingResults(this.shouldResultsCorrespond)
       .withHandler(callback)
       .handleError(this.errorHandler)
       .onTaskStarted(this.onTaskStartedHandlers)
