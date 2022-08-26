@@ -144,7 +144,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   for (items: T[]): this {
     this.meta.items = items
     if (this.meta.shouldResultsCorrespond) {
-      this.meta.results.splice(0, 0, ...Array(items.length).fill(undefined))
+      this.meta.results.splice(0, 0, ...Array(items.length).fill(PromisePool.notRun))
     }
 
     return this

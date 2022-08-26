@@ -557,4 +557,25 @@ test('useCorrespondingResults keeps results in order', async () => {
   expect(results).toEqual([20, PromisePool.rejected, 10])
 })
 
+test('useCorrespondingResults defaults results to notRun symbol', async () => {
+  const timeouts = [20, undefined, 10, 100]
+
+  const { results } = await PromisePool
+    .withConcurrency(1)
+    .for(timeouts)
+    .handleError((_error, _index, pool) => {
+      pool.stop()
+    })
+    .useCorrespondingResults()
+    .process(async (timeout) => {
+      if (timeout) {
+        await pause(timeout)
+        return timeout
+      }
+      throw new Error('did not work')
+    })
+
+  expect(results).toEqual([20, PromisePool.rejected, 10, PromisePool.notRun])
+})
+
 test.run()

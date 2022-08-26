@@ -32,6 +32,7 @@ export class PromisePool<T> {
    */
   private readonly onTaskFinishedHandlers: Array<OnProgressCallback<T>>
 
+  public static readonly notRun: Symbol = Symbol('notRun')
   public static readonly rejected: Symbol = Symbol('rejected')
 
   /**
