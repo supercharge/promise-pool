@@ -6,7 +6,7 @@ export interface ReturnValue<T, R, E = any> {
   /**
    * The list of results returned by the processing function.
    */
-  results: R[]
+  results: Array<R | Symbol>
 
   /**
    * The list of errors that occurred while processing all items in the pool.

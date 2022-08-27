@@ -42,7 +42,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     /**
      * The list of results.
      */
-    readonly results: R[]
+    readonly results: Array<R | Symbol>
 
     /**
      * The list of errors.
@@ -227,7 +227,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    *
    * @returns {R[]}
    */
-  results (): any[] {
+  results (): Array<R | Symbol> {
     return this.meta.results
   }
 
