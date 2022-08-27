@@ -1,6 +1,6 @@
 'use strict'
 
-import { ReturnValue } from './return-value'
+import { ReturnValue, Result } from './return-value'
 import { PromisePool } from './promise-pool'
 import { PromisePoolError } from './promise-pool-error'
 import { StopThePromisePoolError } from './stop-the-promise-pool-error'
@@ -42,7 +42,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     /**
      * The list of results.
      */
-    readonly results: Array<R | Symbol>
+    readonly results: Array<Result<R>>
 
     /**
      * The list of errors.
@@ -227,7 +227,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    *
    * @returns {R[]}
    */
-  results (): Array<R | Symbol> {
+  results (): Array<Result<R>> {
     return this.meta.results
   }
 
