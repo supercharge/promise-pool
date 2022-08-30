@@ -4,7 +4,7 @@ import { ReturnValue } from './return-value'
 import { PromisePoolExecutor } from './promise-pool-executor'
 import { ErrorHandler, ProcessHandler, OnProgressCallback } from './contracts'
 
-export class PromisePool<T> {
+export class PromisePool<T, ReturnType> {
   /**
    * The processable items.
    */
@@ -40,9 +40,9 @@ export class PromisePool<T> {
    *
    * @param {Object} options
    */
-  constructor (items?: T[]) {
+  constructor (items?: T[], shouldResultsCorrespond: boolean = false) {
     this.concurrency = 10
-    this.shouldResultsCorrespond = false
+    this.shouldResultsCorrespond = shouldResultsCorrespond
     this.items = items ?? []
     this.errorHandler = undefined
     this.onTaskStartedHandlers = []
@@ -56,7 +56,7 @@ export class PromisePool<T> {
    *
    * @returns {PromisePool}
    */
-  withConcurrency (concurrency: number): PromisePool<T> {
+  withConcurrency (concurrency: number): PromisePool<T, ReturnType> {
     this.concurrency = concurrency
 
     return this
@@ -69,7 +69,7 @@ export class PromisePool<T> {
    *
    * @returns {PromisePool}
    */
-  static withConcurrency (concurrency: number): PromisePool<unknown> {
+  static withConcurrency (concurrency: number): PromisePool<unknown, unknown> {
     return new this().withConcurrency(concurrency)
   }
 
@@ -80,8 +80,8 @@ export class PromisePool<T> {
    *
    * @returns {PromisePool}
    */
-  for<T> (items: T[]): PromisePool<T> {
-    return new PromisePool<T>(items).withConcurrency(this.concurrency)
+  for<T> (items: T[]): PromisePool<T, ReturnType> {
+    return new PromisePool<T, ReturnType>(items).withConcurrency(this.concurrency)
   }
 
   /**
@@ -91,8 +91,8 @@ export class PromisePool<T> {
    *
    * @returns {PromisePool}
    */
-  static for<T> (items: T[]): PromisePool<T> {
-    return new this<T>().for(items)
+  static for<T, ReturnType> (items: T[]): PromisePool<T, ReturnType> {
+    return new this<T, ReturnType>().for(items)
   }
 
   /**
@@ -102,7 +102,7 @@ export class PromisePool<T> {
    *
    * @returns {PromisePool}
    */
-  handleError (handler: ErrorHandler<T>): PromisePool<T> {
+  handleError (handler: ErrorHandler<T>): PromisePool<T, ReturnType> {
     this.errorHandler = handler
 
     return this
@@ -115,7 +115,7 @@ export class PromisePool<T> {
    *
    * @returns {PromisePool}
    */
-  onTaskStarted (handler: OnProgressCallback<T>): PromisePool<T> {
+  onTaskStarted (handler: OnProgressCallback<T>): PromisePool<T, ReturnType> {
     this.onTaskStartedHandlers.push(handler)
 
     return this
@@ -128,16 +128,25 @@ export class PromisePool<T> {
     *
     * @returns {PromisePool}
     */
-  onTaskFinished (handler: OnProgressCallback<T>): PromisePool<T> {
+  onTaskFinished (handler: OnProgressCallback<T>): PromisePool<T, ReturnType> {
     this.onTaskFinishedHandlers.push(handler)
 
     return this
   }
 
-  useCorrespondingResults (): PromisePool<T> {
-    this.shouldResultsCorrespond = true
-
-    return this
+  useCorrespondingResults () {
+    const pool = new PromisePool<T, number | Symbol>(this.items, true)
+        .withConcurrency(this.concurrency)
+    if (this.errorHandler) {
+      pool.handleError(this.errorHandler);
+    }
+    for (const handler of this.onTaskStartedHandlers) {
+      pool.onTaskStarted(handler)
+    }
+    for (const handler of this.onTaskFinishedHandlers) {
+      pool.onTaskFinished(handler)
+    }
+    return pool
   }
 
   /**
