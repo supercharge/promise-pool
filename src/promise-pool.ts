@@ -4,7 +4,7 @@ import { ReturnValue } from './return-value'
 import { PromisePoolExecutor } from './promise-pool-executor'
 import { ErrorHandler, ProcessHandler, OnProgressCallback } from './contracts'
 
-export class PromisePool<T> {
+export class PromisePool<T, UseCorrespondingResults = false> {
   /**
    * The processable items.
    */
@@ -134,7 +134,7 @@ export class PromisePool<T> {
     return this
   }
 
-  useCorrespondingResults (): PromisePool<T> {
+  useCorrespondingResults (): PromisePool<T, true> {
     this.shouldResultsCorrespond = true
 
     return this
@@ -148,8 +148,14 @@ export class PromisePool<T> {
    *
    * @returns Promise<{ results, errors }>
    */
-  async process<ResultType, ErrorType = any> (callback: ProcessHandler<T, ResultType>): Promise<ReturnValue<T, ResultType, ErrorType>> {
-    return new PromisePoolExecutor<T, ResultType>()
+  async process<Result, ErrorType = any> (callback: ProcessHandler<T, Result>): Promise<
+  ReturnValue<T,
+  UseCorrespondingResults extends true
+    ? Result | Symbol
+    : Result,
+  ErrorType>
+  > {
+    return new PromisePoolExecutor<T, any>()
       .useConcurrency(this.concurrency)
       .useCorrespondingResults(this.shouldResultsCorrespond)
       .withHandler(callback)

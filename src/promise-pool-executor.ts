@@ -1,11 +1,13 @@
 'use strict'
 
-import { ReturnValue, Result } from './return-value'
+import { ReturnValue } from './return-value'
 import { PromisePool } from './promise-pool'
 import { PromisePoolError } from './promise-pool-error'
 import { StopThePromisePoolError } from './stop-the-promise-pool-error'
 import { ErrorHandler, ProcessHandler, OnProgressCallback, Statistics, Stoppable, UsesConcurrency } from './contracts'
 import { ValidationError } from './validation-error'
+
+type Result<R> = R | Symbol
 
 export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, Statistics<T> {
   /**
@@ -225,7 +227,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   /**
    * Returns the list of results.
    *
-   * @returns {R[]}
+   * @returns {Result<R>[]}
    */
   results (): Array<Result<R>> {
     return this.meta.results
@@ -345,7 +347,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    *
    * @returns {ReturnValue}
    */
-  async start (): Promise<ReturnValue<T, R>> {
+  async start (): Promise<ReturnValue<T, Result<R>>> {
     return await this.validateInputs().process()
   }
 
@@ -392,7 +394,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    *
    * @returns {Promise}
    */
-  async process (): Promise<ReturnValue<T, R>> {
+  async process (): Promise<ReturnValue<T, Result<R>>> {
     for (const [index, item] of this.items().entries()) {
       if (this.isStopped()) {
         break
@@ -598,7 +600,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    *
    * @returns {Object}
    */
-  async drained (): Promise<ReturnValue<T, R>> {
+  async drained (): Promise<ReturnValue<T, Result<R>>> {
     await this.drainActiveTasks()
 
     return {
