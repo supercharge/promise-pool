@@ -1,14 +1,11 @@
 'use strict'
 
 import { ReturnValue } from './return-value'
+import { CorrespondingResult, notRun, rejected } from './promise-pool'
 import { PromisePoolError } from './promise-pool-error'
 import { StopThePromisePoolError } from './stop-the-promise-pool-error'
 import { ErrorHandler, ProcessHandler, OnProgressCallback, Statistics, Stoppable, UsesConcurrency } from './contracts'
 import { ValidationError } from './validation-error'
-
-export const notRun: unique symbol = Symbol('notRun')
-export const rejected: unique symbol = Symbol('rejected')
-export type CorrespondingResult<R> = R | typeof notRun | typeof rejected
 
 export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, Statistics<T> {
   /**

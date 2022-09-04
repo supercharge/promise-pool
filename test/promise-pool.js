@@ -2,7 +2,8 @@
 
 const { test } = require('uvu')
 const { expect } = require('expect')
-const { PromisePool, ValidationError } = require('../dist')
+const { PromisePool, ValidationError, notRun, rejected } = require('../dist')
+console.log('notRun', notRun)
 
 async function pause (timeout) {
   return new Promise(resolve => {
@@ -554,7 +555,7 @@ test('useCorrespondingResults keeps results in order', async () => {
       throw new Error('did not work')
     })
 
-  expect(results).toEqual([20, PromisePool.rejected, 10])
+  expect(results).toEqual([20, rejected, 10])
 })
 
 test('useCorrespondingResults defaults results to notRun symbol', async () => {
@@ -575,7 +576,7 @@ test('useCorrespondingResults defaults results to notRun symbol', async () => {
       throw new Error('did not work')
     })
 
-  expect(results).toEqual([20, PromisePool.rejected, 10, PromisePool.notRun])
+  expect(results).toEqual([20, rejected, 10, notRun])
 })
 
 test.run()

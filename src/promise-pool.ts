@@ -1,8 +1,12 @@
 'use strict'
 
 import { ReturnValue } from './return-value'
-import { PromisePoolExecutor, CorrespondingResult } from './promise-pool-executor'
+import { PromisePoolExecutor } from './promise-pool-executor'
 import { ErrorHandler, ProcessHandler, OnProgressCallback } from './contracts'
+
+export const notRun: unique symbol = Symbol('notRun')
+export const rejected: unique symbol = Symbol('rejected')
+export type CorrespondingResult<R> = R | typeof notRun | typeof rejected
 
 export class PromisePool<T, UseCorrespondingResults = false> {
   /**
