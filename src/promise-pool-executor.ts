@@ -1,13 +1,14 @@
 'use strict'
 
 import { ReturnValue } from './return-value'
-import { PromisePool } from './promise-pool'
 import { PromisePoolError } from './promise-pool-error'
 import { StopThePromisePoolError } from './stop-the-promise-pool-error'
 import { ErrorHandler, ProcessHandler, OnProgressCallback, Statistics, Stoppable, UsesConcurrency } from './contracts'
 import { ValidationError } from './validation-error'
 
-type Result<R> = R | symbol
+export const notRun: unique symbol = Symbol('notRun')
+export const rejected: unique symbol = Symbol('rejected')
+export type CorrespondingResult<R> = R | typeof notRun | typeof rejected
 
 export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, Statistics<T> {
   /**
@@ -44,7 +45,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     /**
      * The list of results.
      */
-    readonly results: Array<Result<R>>
+    readonly results: Array<CorrespondingResult<R>>
 
     /**
      * The list of errors.
@@ -146,7 +147,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   for (items: T[]): this {
     this.meta.items = items
     if (this.meta.shouldResultsCorrespond) {
-      this.meta.results.splice(0, 0, ...Array(items.length).fill(PromisePool.notRun))
+      this.meta.results.splice(0, 0, ...Array(items.length).fill(notRun))
     }
 
     return this
@@ -229,7 +230,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    *
    * @returns {Result<R>[]}
    */
-  results (): Array<Result<R>> {
+  results (): Array<CorrespondingResult<R>> {
     return this.meta.results
   }
 
@@ -347,7 +348,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    *
    * @returns {ReturnValue}
    */
-  async start (): Promise<ReturnValue<T, Result<R>>> {
+  async start (): Promise<ReturnValue<T, CorrespondingResult<R>>> {
     return await this.validateInputs().process()
   }
 
@@ -394,7 +395,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    *
    * @returns {Promise}
    */
-  async process (): Promise<ReturnValue<T, Result<R>>> {
+  async process (): Promise<ReturnValue<T, CorrespondingResult<R>>> {
     for (const [index, item] of this.items().entries()) {
       if (this.isStopped()) {
         break
@@ -499,7 +500,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    */
   async handleErrorFor (error: Error, item: T, index: number): Promise<void> {
     if (this.meta.shouldResultsCorrespond) {
-      this.results()[index] = PromisePool.rejected
+      this.results()[index] = rejected
     }
 
     if (this.isStoppingThePoolError(error)) {
@@ -600,7 +601,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    *
    * @returns {Object}
    */
-  async drained (): Promise<ReturnValue<T, Result<R>>> {
+  async drained (): Promise<ReturnValue<T, CorrespondingResult<R>>> {
     await this.drainActiveTasks()
 
     return {

@@ -1,7 +1,7 @@
 'use strict'
 
 import { ReturnValue } from './return-value'
-import { PromisePoolExecutor } from './promise-pool-executor'
+import { PromisePoolExecutor, CorrespondingResult } from './promise-pool-executor'
 import { ErrorHandler, ProcessHandler, OnProgressCallback } from './contracts'
 
 export class PromisePool<T, UseCorrespondingResults = false> {
@@ -31,9 +31,6 @@ export class PromisePool<T, UseCorrespondingResults = false> {
    * The `taskFinished` handler callback functions
    */
   private readonly onTaskFinishedHandlers: Array<OnProgressCallback<T>>
-
-  public static readonly notRun: symbol = Symbol('notRun')
-  public static readonly rejected: symbol = Symbol('rejected')
 
   /**
    * Instantiates a new promise pool with a default `concurrency: 10` and `items: []`.
@@ -153,11 +150,11 @@ export class PromisePool<T, UseCorrespondingResults = false> {
    *
    * @returns Promise<{ results, errors }>
    */
-  async process<Result, ErrorType = any> (callback: ProcessHandler<T, Result>): Promise<
+  async process<R, ErrorType = any> (callback: ProcessHandler<T, R>): Promise<
   ReturnValue<T,
   UseCorrespondingResults extends true
-    ? Result | symbol
-    : Result,
+    ? CorrespondingResult<R>
+    : R,
   ErrorType>
   > {
     return new PromisePoolExecutor<T, any>()
