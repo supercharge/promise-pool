@@ -32,8 +32,8 @@ export class PromisePool<T, UseCorrespondingResults = false> {
    */
   private readonly onTaskFinishedHandlers: Array<OnProgressCallback<T>>
 
-  public static readonly notRun: Symbol = Symbol('notRun')
-  public static readonly rejected: Symbol = Symbol('rejected')
+  public static readonly notRun: symbol = Symbol('notRun')
+  public static readonly rejected: symbol = Symbol('rejected')
 
   /**
    * Instantiates a new promise pool with a default `concurrency: 10` and `items: []`.
@@ -156,7 +156,7 @@ export class PromisePool<T, UseCorrespondingResults = false> {
   async process<Result, ErrorType = any> (callback: ProcessHandler<T, Result>): Promise<
   ReturnValue<T,
   UseCorrespondingResults extends true
-    ? Result | Symbol
+    ? Result | symbol
     : Result,
   ErrorType>
   > {

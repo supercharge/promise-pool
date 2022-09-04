@@ -7,7 +7,7 @@ import { StopThePromisePoolError } from './stop-the-promise-pool-error'
 import { ErrorHandler, ProcessHandler, OnProgressCallback, Statistics, Stoppable, UsesConcurrency } from './contracts'
 import { ValidationError } from './validation-error'
 
-type Result<R> = R | Symbol
+type Result<R> = R | symbol
 
 export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, Statistics<T> {
   /**
