@@ -73,6 +73,33 @@ test('throws when missing the callback in .process', async () => {
   expect(pool.process()).rejects.toThrow()
 })
 
+test('concurrency: 1', async () => {
+  const start = Date.now()
+  const timeouts = [40, 10, 20, 30, 10]
+
+  const { results, errors } = await PromisePool
+    .withConcurrency(1)
+    .for(timeouts)
+    .process(async timeout => {
+      await pause(timeout)
+      return timeout
+    })
+
+  expect(errors).toEqual([])
+  expect(results).toEqual(timeouts)
+
+  const elapsed = Date.now() - start
+  const expectedDuration = timeouts.reduce((sum, timeout) => sum + timeout, 0)
+
+  /**
+   * All tasks run sequentially and each task must finish first before starting
+   * a new task. That means the total duration of processing all items from
+   * the input array is the sum of all timeouts we have to wait for.
+   */
+  expect(elapsed).toBeGreaterThanOrEqual(expectedDuration)
+  expect(elapsed).toBeLessThanOrEqual(expectedDuration + 50) // allow 50ms offset
+})
+
 test('concurrency: 2', async () => {
   const start = Date.now()
   const timeouts = [400, 100, 200, 300, 100]
