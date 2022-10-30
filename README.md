@@ -163,11 +163,10 @@ const { PromisePool } = require('@supercharge/promise-pool')
 await PromisePool
   .for(users)
   .onTaskStarted((item, pool) => {
-    console.log(`Progress: ${pool.processedPercentage()}%`)
-    console.log(`Active tasks: ${pool.processedItems().length}`)
+    console.log(`Progress: ${pool.processedPercentage()}%`);
     console.log(`Active tasks: ${pool.activeTasksCount()}`);
-    console.log(`Finished tasks: ${pool.processedItems().length}`)
-    console.log(`Finished tasks: ${pool.processedCount()}`)
+    console.log(`Finished tasks: ${pool.processedItems().length}`);
+    console.log(`Finished tasks: ${pool.processedCount()}`);
   })
   .onTaskFinished((item, pool) => {
     // update a progress bar or something else :)
