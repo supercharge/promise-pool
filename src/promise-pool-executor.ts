@@ -381,11 +381,12 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    */
   async process (): Promise<ReturnValue<T, R>> {
     for (const [index, item] of this.items().entries()) {
+      await this.waitForProcessingSlot()
+
       if (this.isStopped()) {
         break
       }
 
-      await this.waitForProcessingSlot()
       this.startProcessing(item, index)
     }
 

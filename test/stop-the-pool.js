@@ -83,4 +83,24 @@ test('stops the pool from async error handler', async () => {
   expect(results).toEqual([30])
 })
 
+test('stops the pool without processing additional items', async () => {
+  const timeouts = [10, 20, 10, 20, 10, 20, 10, 20]
+
+  const { results } = await PromisePool
+    .for(timeouts)
+    .withConcurrency(2)
+    .handleError(async (_, __, pool) => {
+      pool.stop()
+    })
+    .process(async (timeout, index) => {
+      const num = index + 1
+      if (num === 5) throw new Error('stop the pool')
+
+      await pause(timeout)
+      return timeout
+    })
+
+  expect(results).toEqual([10, 20, 10, 20])
+})
+
 test.run()
