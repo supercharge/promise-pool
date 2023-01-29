@@ -156,7 +156,9 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
    *
    * @returns Promise<{ results, errors }>
    */
-  async process<ResultType, ErrorType = any> (callback: ProcessHandler<T, ResultType>): Promise<ReturnValue<T, ShouldUseCorrespondingResults extends true ? ResultType | symbol : ResultType, ErrorType>> {
+  async process<ResultType, ErrorType = any> (
+    callback: ProcessHandler<T, ResultType>
+  ): Promise<ReturnValue<T, ShouldUseCorrespondingResults extends true ? ResultType | symbol : ResultType, ErrorType>> {
     return new PromisePoolExecutor<T, ResultType>()
       .useConcurrency(this.concurrency)
       .useCorrespondingResults(this.shouldResultsCorrespond)
