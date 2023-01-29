@@ -153,6 +153,7 @@ try {
 }
 ```
 
+
 ## Callback for Started and Finished Tasks
 You can use the `onTaskStarted` and `onTaskFinished` methods to hook into the processing of tasks. The provided callback for each method will be called when a task started/finished processing:
 
@@ -192,6 +193,37 @@ await PromisePool
     // processes the `user` data
   })
 ```
+
+
+## Correspond Source Items and Their Results
+Sometimes you want the processed results to align with your source items. The resulting items should have the same position in the `results` array as their related source items. Use the `useCorrespondingResults` method to apply this behavior:
+
+```js
+const { PromisePool } = require('@supercharge/promise-pool')
+
+const { results } = await PromisePool
+  .for([1, 2, 3])
+  .useCorrespondingResults()
+  .process(async (number) => {
+    return number * 2
+  })
+
+// the resulting items in the `results` array uses the corresponding positions between source items and their processed results
+```
+
+For example, you may have three items you want to process. Using corresponding results ensures that the processed result for the first item from the source array is located at the first position in the result array (=index `0`). The result for the second item from the source array is placed at the second position in the result array, and so on …
+
+
+### Return Values
+The `results` array returned by the promise pool after processing has a mixed return type. Each returned item is one of this type:
+
+- `R`: the resulting type of the `process` method carried by any task that successfully finished processing
+- `Symbol('notRun')`: carried by any task that didn’t run
+- `Symbol('failed')`: carried by any task that failed processing
+
+You may repeat processing for all tasks that didn’t run. You may also handle failed tasks by going through the `errors` return by the promise pool. The error handling in this case stays the same and you can follow the described error handling in the “Usage” section.
+
+The `PromisePool` exposes both symbols and you may access them using `PromisePool.notRun` and `PromisePool.failed`.
 
 
 ## Contributing
