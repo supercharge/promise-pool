@@ -165,7 +165,7 @@ await PromisePool
   .onTaskStarted((item, pool) => {
     console.log(`Progress: ${pool.processedPercentage()}%`)
     console.log(`Active tasks: ${pool.processedItems().length}`)
-    console.log(`Active tasks: ${pool.activeTasksCount()}`);
+    console.log(`Active tasks: ${pool.activeTasksCount()}`)
     console.log(`Finished tasks: ${pool.processedItems().length}`)
     console.log(`Finished tasks: ${pool.processedCount()}`)
   })
