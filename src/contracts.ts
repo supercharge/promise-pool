@@ -54,8 +54,8 @@ export interface Statistics<T> {
   processedPercentage (): number
 }
 
-export type ErrorHandler<T> = (error: Error, item: T, pool: Stoppable & UsesConcurrency) => void | Promise<void>
+export type ErrorHandler<T> = (error: Error, item: T, pool: Stoppable & UsesConcurrency) => Promise<void> | void
 
-export type ProcessHandler<T, R> = (item: T, index: number, pool: Stoppable & UsesConcurrency) => R | Promise<R>
+export type ProcessHandler<T, R> = (item: T, index: number, pool: Stoppable & UsesConcurrency) => Promise<R> | R
 
 export type OnProgressCallback<T> = (item: T, pool: Stoppable & Statistics<T> & UsesConcurrency) => void
