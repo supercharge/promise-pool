@@ -15,6 +15,11 @@ export class PromisePool<T> {
    */
   private concurrency: number
 
+  /**
+   * Determine whether to put a task’s result at the same position in the result
+   * array as its related source item has in the source array. Failing tasks
+   * and those items that didn’t run carry a related symbol as a value.
+   */
   private shouldResultsCorrespond: boolean
 
   /**
@@ -32,8 +37,8 @@ export class PromisePool<T> {
    */
   private readonly onTaskFinishedHandlers: Array<OnProgressCallback<T>>
 
-  public static readonly notRun: Symbol = Symbol('notRun')
-  public static readonly rejected: Symbol = Symbol('rejected')
+  public static readonly notRun: symbol = Symbol('notRun')
+  public static readonly failed: symbol = Symbol('failed')
 
   /**
    * Instantiates a new promise pool with a default `concurrency: 10` and `items: []`.
@@ -122,18 +127,21 @@ export class PromisePool<T> {
   }
 
   /**
-    * Assign the given callback `handler` function to run when a task finished.
-    *
-    * @param {OnProgressCallback<T>} handler
-    *
-    * @returns {PromisePool}
-    */
+   * Assign the given callback `handler` function to run when a task finished.
+   *
+   * @param {OnProgressCallback<T>} handler
+   *
+   * @returns {PromisePool}
+   */
   onTaskFinished (handler: OnProgressCallback<T>): PromisePool<T> {
     this.onTaskFinishedHandlers.push(handler)
 
     return this
   }
 
+  /**
+   * Assign whether to keep corresponding results between source items and resulting tasks.
+   */
   useCorrespondingResults (): PromisePool<T> {
     this.shouldResultsCorrespond = true
 

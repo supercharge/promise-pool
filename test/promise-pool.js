@@ -581,7 +581,7 @@ test('useCorrespondingResults keeps results in order', async () => {
       throw new Error('did not work')
     })
 
-  expect(results).toEqual([20, PromisePool.rejected, 10])
+  expect(results).toEqual([20, PromisePool.failed, 10])
 })
 
 test('useCorrespondingResults defaults results to notRun symbol', async () => {
@@ -602,7 +602,7 @@ test('useCorrespondingResults defaults results to notRun symbol', async () => {
       throw new Error('did not work')
     })
 
-  expect(results).toEqual([20, PromisePool.rejected, 10, PromisePool.notRun])
+  expect(results).toEqual([20, PromisePool.failed, 10, PromisePool.notRun])
 })
 
 test.run()
