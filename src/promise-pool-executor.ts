@@ -27,6 +27,10 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
      */
     concurrency: number
 
+    /**
+     * Determine whether to put a task’s result at the same position in the result
+     * array as its related source item has in the source array.
+     */
     shouldResultsCorrespond: boolean
 
     /**
