@@ -4,7 +4,7 @@ import { ReturnValue } from './return-value'
 import { PromisePoolExecutor } from './promise-pool-executor'
 import { ErrorHandler, ProcessHandler, OnProgressCallback } from './contracts'
 
-export class PromisePool<T> {
+export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = false> {
   /**
    * The processable items.
    */
@@ -14,6 +14,13 @@ export class PromisePool<T> {
    * The number of promises running concurrently.
    */
   private concurrency: number
+
+  /**
+   * Determine whether to put a task’s result at the same position in the result
+   * array as its related source item has in the source array. Failing tasks
+   * and those items that didn’t run carry a related symbol as a value.
+   */
+  private shouldResultsCorrespond: boolean
 
   /**
    * The maximum timeout in milliseconds for the item handler, or `undefined` to disable.
@@ -35,6 +42,9 @@ export class PromisePool<T> {
    */
   private readonly onTaskFinishedHandlers: Array<OnProgressCallback<T>>
 
+  public static readonly notRun: symbol = Symbol('notRun')
+  public static readonly failed: symbol = Symbol('failed')
+
   /**
    * Instantiates a new promise pool with a default `concurrency: 10` and `items: []`.
    *
@@ -43,6 +53,7 @@ export class PromisePool<T> {
   constructor (items?: T[]) {
     this.timeout = undefined
     this.concurrency = 10
+    this.shouldResultsCorrespond = false
     this.items = items ?? []
     this.errorHandler = undefined
     this.onTaskStartedHandlers = []
@@ -148,14 +159,23 @@ export class PromisePool<T> {
   }
 
   /**
-    * Assign the given callback `handler` function to run when a task finished.
-    *
-    * @param {OnProgressCallback<T>} handler
-    *
-    * @returns {PromisePool}
-    */
+   * Assign the given callback `handler` function to run when a task finished.
+   *
+   * @param {OnProgressCallback<T>} handler
+   *
+   * @returns {PromisePool}
+   */
   onTaskFinished (handler: OnProgressCallback<T>): PromisePool<T> {
     this.onTaskFinishedHandlers.push(handler)
+
+    return this
+  }
+
+  /**
+   * Assign whether to keep corresponding results between source items and resulting tasks.
+   */
+  useCorrespondingResults (): PromisePool<T, true> {
+    this.shouldResultsCorrespond = true
 
     return this
   }
@@ -168,9 +188,12 @@ export class PromisePool<T> {
    *
    * @returns Promise<{ results, errors }>
    */
-  async process<ResultType, ErrorType = any> (callback: ProcessHandler<T, ResultType>): Promise<ReturnValue<T, ResultType, ErrorType>> {
+  async process<ResultType, ErrorType = any> (
+    callback: ProcessHandler<T, ResultType>
+  ): Promise<ReturnValue<T, ShouldUseCorrespondingResults extends true ? ResultType | symbol : ResultType, ErrorType>> {
     return new PromisePoolExecutor<T, ResultType>()
       .useConcurrency(this.concurrency)
+      .useCorrespondingResults(this.shouldResultsCorrespond)
       .withTimeout(this.timeout)
       .withHandler(callback)
       .handleError(this.errorHandler)

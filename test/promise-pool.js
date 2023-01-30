@@ -581,6 +581,44 @@ test('fails to change the concurrency for a running pool to an invalid value', a
   ).rejects.toThrow(ValidationError)
 })
 
+test('useCorrespondingResults keeps results in order', async () => {
+  const timeouts = [20, undefined, 10]
+
+  const { results } = await PromisePool
+    .for(timeouts)
+    .useCorrespondingResults()
+    .process(async (timeout) => {
+      if (timeout) {
+        await pause(timeout)
+        return timeout
+      }
+      throw new Error('did not work')
+    })
+
+  expect(results).toEqual([20, PromisePool.failed, 10])
+})
+
+test('useCorrespondingResults defaults results to notRun symbol', async () => {
+  const timeouts = [20, undefined, 10, 100]
+
+  const { results } = await PromisePool
+    .withConcurrency(1)
+    .for(timeouts)
+    .handleError((_error, _index, pool) => {
+      pool.stop()
+    })
+    .useCorrespondingResults()
+    .process(async (timeout) => {
+      if (timeout) {
+        await pause(timeout)
+        return timeout
+      }
+      throw new Error('did not work')
+    })
+
+  expect(results).toEqual([20, PromisePool.failed, 10, PromisePool.notRun])
+})
+
 test('can timeout long-running handlers', async () => {
   const timers = [1, 2, 3, 4]
 

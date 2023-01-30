@@ -1,5 +1,6 @@
 'use strict'
 
+import { PromisePool } from './promise-pool'
 import { ReturnValue } from './return-value'
 import { PromisePoolError } from './promise-pool-error'
 import { StopThePromisePoolError } from './stop-the-promise-pool-error'
@@ -27,6 +28,12 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     concurrency: number
 
     /**
+     * Determine whether to put a task’s result at the same position in the result
+     * array as its related source item has in the source array.
+     */
+    shouldResultsCorrespond: boolean
+
+    /**
      * The maximum timeout in milliseconds for the item handler, or `undefined` to disable.
      */
     timeout: number | undefined
@@ -44,7 +51,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     /**
      * The list of results.
      */
-    readonly results: R[]
+    results: Array<R | symbol>
 
     /**
      * The list of errors.
@@ -83,6 +90,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
       results: [],
       stopped: false,
       concurrency: 10,
+      shouldResultsCorrespond: false,
       processedItems: [],
       timeout: 0
     }
@@ -141,6 +149,22 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    */
   concurrency (): number {
     return this.meta.concurrency
+  }
+
+  /**
+   * Assign whether to keep corresponding results between source items and resulting tasks.
+   */
+  useCorrespondingResults (shouldResultsCorrespond: boolean): this {
+    this.meta.shouldResultsCorrespond = shouldResultsCorrespond
+
+    return this
+  }
+
+  /**
+   * Determine whether to keep corresponding results between source items and resulting tasks.
+   */
+  shouldUseCorrespondingResults (): boolean {
+    return this.meta.shouldResultsCorrespond
   }
 
   /**
@@ -242,7 +266,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    *
    * @returns {R[]}
    */
-  results (): R[] {
+  results (): Array<R | symbol> {
     return this.meta.results
   }
 
@@ -360,8 +384,11 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    *
    * @returns {ReturnValue}
    */
-  async start (): Promise<ReturnValue<T, R>> {
-    return await this.validateInputs().process()
+  async start (): Promise<any> {
+    return await this
+      .validateInputs()
+      .prepareResultsArray()
+      .process()
   }
 
   /**
@@ -406,6 +433,17 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   }
 
   /**
+   * Prefill the results array with `notRun` symbol values if results should correspond.
+   */
+  private prepareResultsArray (): this {
+    if (this.shouldUseCorrespondingResults()) {
+      this.meta.results = Array(this.items().length).fill(PromisePool.notRun)
+    }
+
+    return this
+  }
+
+  /**
    * Starts processing the promise pool by iterating over the items
    * and running each item through the async `callback` function.
    *
@@ -436,10 +474,17 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
      * finish processing before moving on to process the remaining tasks.
      */
     while (this.hasReachedConcurrencyLimit()) {
-      await Promise.race(
-        this.tasks()
-      )
+      await this.waitForActiveTaskToFinish()
     }
+  }
+
+  /**
+   * Wait for the next, currently active task to finish processing.
+   */
+  async waitForActiveTaskToFinish (): Promise<void> {
+    await Promise.race(
+      this.tasks()
+    )
   }
 
   /**
@@ -451,10 +496,10 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   startProcessing (item: T, index: number): void {
     const task: Promise<void> = this.createTaskFor(item, index)
       .then(result => {
-        this.save(result).removeActive(task)
+        this.save(result, index).removeActive(task)
       })
       .catch(async error => {
-        await this.handleErrorFor(error, item)
+        await this.handleErrorFor(error, item, index)
         this.removeActive(task)
       })
       .finally(() => {
@@ -491,14 +536,17 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   }
 
   /**
-   * Save the given calculation `result`.
+   * Save the given calculation `result`, possibly at the provided `position`.
    *
    * @param {*} result
+   * @param {number} position
    *
    * @returns {PromisePoolExecutor}
    */
-  save (result: any): this {
-    this.results().push(result)
+  save (result: any, position: number): this {
+    this.shouldUseCorrespondingResults()
+      ? this.results()[position] = result
+      : this.results().push(result)
 
     return this
   }
@@ -521,8 +569,13 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    *
    * @param {Error} error
    * @param {T} item
+   * @param {number} index
    */
-  async handleErrorFor (error: Error, item: T): Promise<void> {
+  async handleErrorFor (error: Error, item: T, index: number): Promise<void> {
+    if (this.shouldUseCorrespondingResults()) {
+      this.results()[index] = PromisePool.failed
+    }
+
     if (this.isStoppingThePoolError(error)) {
       return
     }
@@ -621,7 +674,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    *
    * @returns {Object}
    */
-  async drained (): Promise<ReturnValue<T, R>> {
+  async drained (): Promise<ReturnValue<T, any>> {
     await this.drainActiveTasks()
 
     return {
