@@ -3,6 +3,7 @@
 ## [2.4.0](https://github.com/supercharge/promise-pool/compare/v2.3.2...v2.4.0) - 2023-01-xx
 
 ### Updated
+- bump dependencies
 - refined types when a promise or non-promise resuult will be handled
 
 
