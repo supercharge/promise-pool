@@ -2,7 +2,7 @@
 
 const { test } = require('uvu')
 const { expect } = require('expect')
-const { PromisePool, ValidationError } = require('../dist')
+const { PromisePool, ValidationError, PromisePoolError } = require('../dist')
 
 async function pause (timeout) {
   return new Promise(resolve => {
@@ -25,6 +25,12 @@ test('supports a static .for method', async () => {
 test('supports a static .withConcurrency method', async () => {
   const pool = PromisePool.withConcurrency(4)
   expect(pool.concurrency).toEqual(4)
+  expect(pool instanceof PromisePool).toBe(true)
+})
+
+test('supports a static .withTimeout method', async () => {
+  const pool = PromisePool.withTimeout(4000)
+  expect(pool.timeout).toEqual(4000)
   expect(pool instanceof PromisePool).toBe(true)
 })
 
@@ -58,6 +64,14 @@ test('ensures concurrency is a number', async () => {
   await expect(pool.withConcurrency(0).process(fn)).rejects.toThrow(ValidationError)
   await expect(pool.withConcurrency(-1).process(fn)).rejects.toThrow(ValidationError)
   await expect(pool.withConcurrency(null).process(fn)).rejects.toThrow(ValidationError)
+})
+
+test('timeout is a valid number', async () => {
+  const pool = new PromisePool();
+  const fn = () => {}
+
+  await expect(pool.withTimeout(-1).process(fn)).rejects.toThrow(ValidationError);
+  await expect(pool.withTimeout(null).process(fn)).rejects.toThrow(ValidationError);
 })
 
 test('ensures the items are an array', async () => {
@@ -565,6 +579,21 @@ test('fails to change the concurrency for a running pool to an invalid value', a
         await pause(timeout)
       })
   ).rejects.toThrow(ValidationError)
+}
+)
+test('can timeout long-running handlers', async () => {
+  const timers = [1, 2]
+
+  const { results, errors } = await PromisePool
+    .withTimeout(10)
+    .for(timers)
+    .process(async (timer) => {
+      const computed = 10*timer
+      await pause(computed)
+      return computed
+    })
+    expect(results).toEqual([10])
+    expect(errors[0]).toBeInstanceOf(PromisePoolError)
 })
 
 test.run()

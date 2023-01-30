@@ -16,6 +16,11 @@ export class PromisePool<T> {
   private concurrency: number
 
   /**
+   * Timeout in ms of the item handler, or 0 to disable.
+   */
+  private timeout: number
+
+  /**
    * The error handler callback function
    */
   private errorHandler?: ErrorHandler<T>
@@ -37,6 +42,7 @@ export class PromisePool<T> {
    */
   constructor (items?: T[]) {
     this.concurrency = 10
+    this.timeout = 0
     this.items = items ?? []
     this.errorHandler = undefined
     this.onTaskStartedHandlers = []
@@ -68,6 +74,30 @@ export class PromisePool<T> {
   }
 
   /**
+   * Set the timeout in ms for the pool handler
+   *
+   * @param {Number} timeout
+   *
+   * @returns {PromisePool}
+   */
+  withTimeout (timeout: number): PromisePool<T> {
+    this.timeout = timeout
+
+    return this
+  }
+
+  /**
+   * Set the timeout in ms for the pool handler
+   *
+   * @param {Number} timeout
+   *
+   * @returns {PromisePool}
+   */
+  static withTimeout (timeout: number): PromisePool<unknown> {
+    return new this().withTimeout(timeout)
+  }
+
+  /**
    * Set the items to be processed in the promise pool.
    *
    * @param {T[]} items
@@ -75,7 +105,7 @@ export class PromisePool<T> {
    * @returns {PromisePool}
    */
   for<T> (items: T[]): PromisePool<T> {
-    return new PromisePool<T>(items).withConcurrency(this.concurrency)
+    return new PromisePool<T>(items).withConcurrency(this.concurrency).withTimeout(this.timeout)
   }
 
   /**
@@ -139,6 +169,7 @@ export class PromisePool<T> {
   async process<ResultType, ErrorType = any> (callback: ProcessHandler<T, ResultType>): Promise<ReturnValue<T, ResultType, ErrorType>> {
     return new PromisePoolExecutor<T, ResultType>()
       .useConcurrency(this.concurrency)
+      .withTimeout(this.timeout)
       .withHandler(callback)
       .handleError(this.errorHandler)
       .onTaskStarted(this.onTaskStartedHandlers)
