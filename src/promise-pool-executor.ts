@@ -27,9 +27,9 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     concurrency: number
 
     /**
-     * The item handler timeout in ms.
+     * The maximum timeout in milliseconds for the item handler, or `undefined` to disable.
      */
-    timeout: number
+    timeout: number | undefined
 
     /**
      * Determine whether the pool is stopped.
@@ -128,7 +128,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    *
    * @returns {PromisePool}
    */
-  withTimeout (timeout: number): this {
+  withTimeout (timeout: number | undefined): this {
     this.meta.timeout = timeout
 
     return this
@@ -148,7 +148,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    *
    * @returns {Number}
    */
-  timeout (): number {
+  timeout (): number | undefined {
     return this.meta.timeout
   }
 
@@ -376,27 +376,29 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
       throw ValidationError.createFrom('The first parameter for the .process(fn) method must be a function')
     }
 
-    if (!(typeof this.timeout() === 'number' && this.timeout() >= 0)) {
-      throw ValidationError.createFrom(`"timeout" must be a number, 0 or up. Received "${this.timeout()}" (${typeof this.timeout()})`)
+    const timeout = this.timeout()
+
+    if (!(timeout == null || (typeof timeout === 'number' && timeout >= 0))) {
+      throw ValidationError.createFrom(`"timeout" must be undefined or a number. A number must be 0 or up. Received "${String(timeout)}" (${typeof timeout})`)
     }
 
     if (!Array.isArray(this.items())) {
-      throw ValidationError.createFrom(`"items" must be an array. Received ${typeof this.items()}`)
+      throw ValidationError.createFrom(`"items" must be an array. Received "${typeof this.items()}"`)
     }
 
     if (this.errorHandler && typeof this.errorHandler !== 'function') {
-      throw ValidationError.createFrom(`The error handler must be a function. Received ${typeof this.errorHandler}`)
+      throw ValidationError.createFrom(`The error handler must be a function. Received "${typeof this.errorHandler}"`)
     }
 
     this.onTaskStartedHandlers.forEach(handler => {
       if (handler && typeof handler !== 'function') {
-        throw ValidationError.createFrom(`The onTaskStarted handler must be a function. Received ${typeof handler}`)
+        throw ValidationError.createFrom(`The onTaskStarted handler must be a function. Received "${typeof handler}"`)
       }
     })
 
     this.onTaskFinishedHandlers.forEach(handler => {
       if (handler && typeof handler !== 'function') {
-        throw ValidationError.createFrom(`The error handler must be a function. Received ${typeof handler}`)
+        throw ValidationError.createFrom(`The error handler must be a function. Received "${typeof handler}"`)
       }
     })
 
@@ -473,15 +475,16 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    * @returns {*}
    */
   async createTaskFor (item: T, index: number): Promise<any> {
-    if (this.timeout() === 0) {
+    if (this.timeout() === undefined) {
       return this.handler(item, index, this)
     }
+
     return Promise.race([
       this.handler(item, index, this),
 
       new Promise<void>((_resolve, reject) => {
         setTimeout(() => {
-          reject(new PromisePoolError(`Promise in pool timed out after ${this.timeout()}ms`, item))
+          reject(new PromisePoolError(`Promise in pool timed out after ${this.timeout() as number}ms`, item))
         }, this.timeout())
       })
     ])

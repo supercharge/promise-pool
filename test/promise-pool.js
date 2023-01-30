@@ -66,12 +66,12 @@ test('ensures concurrency is a number', async () => {
   await expect(pool.withConcurrency(null).process(fn)).rejects.toThrow(ValidationError)
 })
 
-test('timeout is a valid number', async () => {
+test('ensures timeout is a valid number', async () => {
   const pool = new PromisePool()
   const fn = () => {}
 
   await expect(pool.withTimeout(-1).process(fn)).rejects.toThrow(ValidationError)
-  await expect(pool.withTimeout(null).process(fn)).rejects.toThrow(ValidationError)
+  await expect(pool.withTimeout('-1').process(fn)).rejects.toThrow(ValidationError)
 })
 
 test('ensures the items are an array', async () => {
@@ -579,10 +579,10 @@ test('fails to change the concurrency for a running pool to an invalid value', a
         await pause(timeout)
       })
   ).rejects.toThrow(ValidationError)
-}
-)
+})
+
 test('can timeout long-running handlers', async () => {
-  const timers = [1, 2]
+  const timers = [1, 2, 3, 4]
 
   const { results, errors } = await PromisePool
     .withTimeout(10)
@@ -590,10 +590,20 @@ test('can timeout long-running handlers', async () => {
     .process(async (timer) => {
       const computed = 10 * timer
       await pause(computed)
+
       return computed
     })
+
+  // only the first item resolves
   expect(results).toEqual([10])
+
+  // items 2, 3, and 4 time out
+  expect(errors.length).toEqual(3)
   expect(errors[0]).toBeInstanceOf(PromisePoolError)
+  expect(errors[1]).toBeInstanceOf(PromisePoolError)
+  expect(errors[2]).toBeInstanceOf(PromisePoolError)
+
+  expect(errors.map(error => error.item)).toEqual([2, 3, 4])
 })
 
 test.run()

@@ -16,9 +16,9 @@ export class PromisePool<T> {
   private concurrency: number
 
   /**
-   * Timeout in ms of the item handler, or 0 to disable.
+   * The maximum timeout in milliseconds for the item handler, or `undefined` to disable.
    */
-  private timeout: number
+  private timeout: number | undefined
 
   /**
    * The error handler callback function
@@ -41,8 +41,8 @@ export class PromisePool<T> {
    * @param {Object} options
    */
   constructor (items?: T[]) {
+    this.timeout = undefined
     this.concurrency = 10
-    this.timeout = 0
     this.items = items ?? []
     this.errorHandler = undefined
     this.onTaskStartedHandlers = []
@@ -74,7 +74,7 @@ export class PromisePool<T> {
   }
 
   /**
-   * Set the timeout in ms for the pool handler
+   * Set the timeout in milliseconds for the pool handler.
    *
    * @param {Number} timeout
    *
@@ -87,7 +87,7 @@ export class PromisePool<T> {
   }
 
   /**
-   * Set the timeout in ms for the pool handler
+   * Set the timeout in milliseconds for the pool handler.
    *
    * @param {Number} timeout
    *
@@ -105,7 +105,9 @@ export class PromisePool<T> {
    * @returns {PromisePool}
    */
   for<T> (items: T[]): PromisePool<T> {
-    return new PromisePool<T>(items).withConcurrency(this.concurrency).withTimeout(this.timeout)
+    return typeof this.timeout === 'number'
+      ? new PromisePool<T>(items).withConcurrency(this.concurrency).withTimeout(this.timeout)
+      : new PromisePool<T>(items).withConcurrency(this.concurrency)
   }
 
   /**
