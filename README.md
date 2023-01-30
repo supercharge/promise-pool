@@ -47,7 +47,7 @@ Using the promise pool is pretty straightforward. The package exposes a class an
 Here’s an example using a concurrency of 2:
 
 ```js
-const { PromisePool } = require('@supercharge/promise-pool')
+import { PromisePool } from '@supercharge/promise-pool'
 
 const users = [
   { name: 'Marcus' },
@@ -94,7 +94,7 @@ await PromisePool
 You may also stop the pool from within the `.handleError()` method in case you need to:
 
 ```js
-const { PromisePool } = require('@supercharge/promise-pool')
+import { PromisePool } from '@supercharge/promise-pool'
 
 await PromisePool
   .for(users)
@@ -119,7 +119,7 @@ The promise pool allows for custom error handling. You can take over the error h
 Providing a custom error handler allows you to exit the promise pool early by throwing inside the error handler function. Throwing errors is in line with Node.js error handling using async/await.
 
 ```js
-const { PromisePool } = require('@supercharge/promise-pool')
+import { PromisePool } from '@supercharge/promise-pool'
 
 try {
   const errors = []
@@ -159,7 +159,7 @@ You can use the `onTaskStarted` and `onTaskFinished` methods to hook into the pr
 
 
 ```js
-const { PromisePool } = require('@supercharge/promise-pool')
+import { PromisePool } from '@supercharge/promise-pool'
 
 await PromisePool
   .for(users)
@@ -181,7 +181,7 @@ await PromisePool
 You can also chain multiple `onTaskStarted` and `onTaskFinished` handling (in case you want to separate some functionality):
 
 ```js
-const { PromisePool } = require('@supercharge/promise-pool')
+import { PromisePool } from '@supercharge/promise-pool'
 
 await PromisePool
   .for(users)
@@ -199,31 +199,64 @@ await PromisePool
 Sometimes you want the processed results to align with your source items. The resulting items should have the same position in the `results` array as their related source items. Use the `useCorrespondingResults` method to apply this behavior:
 
 ```js
-const { PromisePool } = require('@supercharge/promise-pool')
+import { setTimeout } from 'node:timers/promises'
+import { PromisePool } from '@supercharge/promise-pool'
 
 const { results } = await PromisePool
   .for([1, 2, 3])
+  .withConcurrency(5)
   .useCorrespondingResults()
-  .process(async (number) => {
-    return number * 2
+  .process(async (number, index) => {
+    const value = number * 2
+
+    return await setTimeout(10 - index, value)
   })
 
-// the resulting items in the `results` array uses the corresponding positions between source items and their processed results
+/**
+ * source array: [1, 2, 3]
+ * result array: [2, 4 ,6]
+ * --> result values match the position of their source items
+ */
 ```
 
 For example, you may have three items you want to process. Using corresponding results ensures that the processed result for the first item from the source array is located at the first position in the result array (=index `0`). The result for the second item from the source array is placed at the second position in the result array, and so on …
 
 
-### Return Values
+### Return Values When Using Corresponding Results
 The `results` array returned by the promise pool after processing has a mixed return type. Each returned item is one of this type:
 
-- `R`: the resulting type of the `process` method carried by any task that successfully finished processing
-- `Symbol('notRun')`: carried by any task that didn’t run
-- `Symbol('failed')`: carried by any task that failed processing
+- the actual value type: for results that successfully finished processing
+- `Symbol('notRun')`: for tasks that didn’t run
+- `Symbol('failed')`: for tasks that failed processing
 
-You may repeat processing for all tasks that didn’t run. You may also handle failed tasks by going through the `errors` return by the promise pool. The error handling in this case stays the same and you can follow the described error handling in the “Usage” section.
+The `PromisePool` exposes both symbols and you may access them using
 
-The `PromisePool` exposes both symbols and you may access them using `PromisePool.notRun` and `PromisePool.failed`.
+- `Symbol('notRun')`: exposed as `PromisePool.notRun`
+- `Symbol('failed')`: exposed as `PromisePool.failed`
+
+You may repeat processing for all tasks that didn’t run or failed:
+
+```js
+import { PromisePool } from '@supercharge/promise-pool'
+
+const { results, errors } = await PromisePool
+  .for([1, 2, 3])
+  .withConcurrency(5)
+  .useCorrespondingResults()
+  .process(async (number) => {
+    // …
+  })
+
+const itemsNotRun = results.filter(result => {
+  return result === PromisePool.notRun
+})
+
+const failedItems = results.filter(result => {
+  return result === PromisePool.failed
+})
+```
+
+When using corresponding results, you need to go through the `errors` array yourself. The default error handling (collect errors) stays the same and you can follow the described error handling section above.
 
 
 ## Contributing
