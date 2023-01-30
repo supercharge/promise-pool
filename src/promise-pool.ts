@@ -23,6 +23,11 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
   private shouldResultsCorrespond: boolean
 
   /**
+   * The maximum timeout in milliseconds for the item handler, or `undefined` to disable.
+   */
+  private timeout: number | undefined
+
+  /**
    * The error handler callback function
    */
   private errorHandler?: ErrorHandler<T>
@@ -46,6 +51,7 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
    * @param {Object} options
    */
   constructor (items?: T[]) {
+    this.timeout = undefined
     this.concurrency = 10
     this.shouldResultsCorrespond = false
     this.items = items ?? []
@@ -79,6 +85,30 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
   }
 
   /**
+   * Set the timeout in milliseconds for the pool handler.
+   *
+   * @param {Number} timeout
+   *
+   * @returns {PromisePool}
+   */
+  withTimeout (timeout: number): PromisePool<T> {
+    this.timeout = timeout
+
+    return this
+  }
+
+  /**
+   * Set the timeout in milliseconds for the pool handler.
+   *
+   * @param {Number} timeout
+   *
+   * @returns {PromisePool}
+   */
+  static withTimeout (timeout: number): PromisePool<unknown> {
+    return new this().withTimeout(timeout)
+  }
+
+  /**
    * Set the items to be processed in the promise pool.
    *
    * @param {T[]} items
@@ -86,7 +116,9 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
    * @returns {PromisePool}
    */
   for<T> (items: T[]): PromisePool<T> {
-    return new PromisePool<T>(items).withConcurrency(this.concurrency)
+    return typeof this.timeout === 'number'
+      ? new PromisePool<T>(items).withConcurrency(this.concurrency).withTimeout(this.timeout)
+      : new PromisePool<T>(items).withConcurrency(this.concurrency)
   }
 
   /**
@@ -162,6 +194,7 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
     return new PromisePoolExecutor<T, ResultType>()
       .useConcurrency(this.concurrency)
       .useCorrespondingResults(this.shouldResultsCorrespond)
+      .withTimeout(this.timeout)
       .withHandler(callback)
       .handleError(this.errorHandler)
       .onTaskStarted(this.onTaskStartedHandlers)

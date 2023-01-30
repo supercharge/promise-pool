@@ -2,7 +2,7 @@
 
 const { test } = require('uvu')
 const { expect } = require('expect')
-const { PromisePool, ValidationError } = require('../dist')
+const { PromisePool, ValidationError, PromisePoolError } = require('../dist')
 
 async function pause (timeout) {
   return new Promise(resolve => {
@@ -25,6 +25,12 @@ test('supports a static .for method', async () => {
 test('supports a static .withConcurrency method', async () => {
   const pool = PromisePool.withConcurrency(4)
   expect(pool.concurrency).toEqual(4)
+  expect(pool instanceof PromisePool).toBe(true)
+})
+
+test('supports a static .withTimeout method', async () => {
+  const pool = PromisePool.withTimeout(4000)
+  expect(pool.timeout).toEqual(4000)
   expect(pool instanceof PromisePool).toBe(true)
 })
 
@@ -58,6 +64,14 @@ test('ensures concurrency is a number', async () => {
   await expect(pool.withConcurrency(0).process(fn)).rejects.toThrow(ValidationError)
   await expect(pool.withConcurrency(-1).process(fn)).rejects.toThrow(ValidationError)
   await expect(pool.withConcurrency(null).process(fn)).rejects.toThrow(ValidationError)
+})
+
+test('ensures timeout is a valid number', async () => {
+  const pool = new PromisePool()
+  const fn = () => {}
+
+  await expect(pool.withTimeout(-1).process(fn)).rejects.toThrow(ValidationError)
+  await expect(pool.withTimeout('-1').process(fn)).rejects.toThrow(ValidationError)
 })
 
 test('ensures the items are an array', async () => {
@@ -546,7 +560,7 @@ test('can increase the concurrency while the pool is running', async () => {
    * 3. the changed concurrency results in processing the remainin items in parallel
    * 4. processing the items 30,40,50 in parallel has the longest timeout is the limit
    */
-  expect(elapsed).toBeGreaterThanOrEqual(10 + 20 + 50)
+  expect(elapsed).toBeGreaterThanOrEqual(10 + 20 + 50 - 1) // -1 is a leeway if the pool is faster
   expect(elapsed).toBeLessThanOrEqual(10 + 20 + 50 + 8) // +8 is a leeway for the pool overhead
 })
 
@@ -603,6 +617,31 @@ test('useCorrespondingResults defaults results to notRun symbol', async () => {
     })
 
   expect(results).toEqual([20, PromisePool.failed, 10, PromisePool.notRun])
+})
+
+test('can timeout long-running handlers', async () => {
+  const timers = [1, 2, 3, 4]
+
+  const { results, errors } = await PromisePool
+    .withTimeout(10)
+    .for(timers)
+    .process(async (timer) => {
+      const computed = 10 * timer
+      await pause(computed)
+
+      return computed
+    })
+
+  // only the first item resolves
+  expect(results).toEqual([10])
+
+  // items 2, 3, and 4 time out
+  expect(errors.length).toEqual(3)
+  expect(errors[0]).toBeInstanceOf(PromisePoolError)
+  expect(errors[1]).toBeInstanceOf(PromisePoolError)
+  expect(errors[2]).toBeInstanceOf(PromisePoolError)
+
+  expect(errors.map(error => error.item)).toEqual([2, 3, 4])
 })
 
 test.run()
