@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.4.0](https://github.com/supercharge/promise-pool/compare/v2.3.2...v2.4.0) - 2023-01-xx
+## [2.4.0](https://github.com/supercharge/promise-pool/compare/v2.3.2...v2.4.0) - 2023-02-10
+
+### Added
+- [support task timeouts](https://github.com/supercharge/promise-pool#task-timeouts)
+- [support corresponding results](https://github.com/supercharge/promise-pool#correspond-source-items-and-their-results)
 
 ### Updated
 - bump dependencies
