@@ -28,8 +28,8 @@ test('supports a static .withConcurrency method', async () => {
   expect(pool instanceof PromisePool).toBe(true)
 })
 
-test('supports a static .withTimeout method', async () => {
-  const pool = PromisePool.withTimeout(4000)
+test('supports a static .withTaskTimeout method', async () => {
+  const pool = PromisePool.withTaskTimeout(4000)
   expect(pool.timeout).toEqual(4000)
   expect(pool instanceof PromisePool).toBe(true)
 })
@@ -70,8 +70,8 @@ test('ensures timeout is a valid number', async () => {
   const pool = new PromisePool()
   const fn = () => {}
 
-  await expect(pool.withTimeout(-1).process(fn)).rejects.toThrow(ValidationError)
-  await expect(pool.withTimeout('-1').process(fn)).rejects.toThrow(ValidationError)
+  await expect(pool.withTaskTimeout(-1).process(fn)).rejects.toThrow(ValidationError)
+  await expect(pool.withTaskTimeout('-1').process(fn)).rejects.toThrow(ValidationError)
 })
 
 test('ensures the items are an array', async () => {
@@ -623,7 +623,7 @@ test('can timeout long-running handlers', async () => {
   const timers = [1, 2, 3, 4]
 
   const { results, errors } = await PromisePool
-    .withTimeout(10)
+    .withTaskTimeout(10)
     .for(timers)
     .process(async (timer) => {
       const computed = 10 * timer

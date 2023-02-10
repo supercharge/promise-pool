@@ -91,7 +91,7 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
    *
    * @returns {PromisePool}
    */
-  withTimeout (timeout: number): PromisePool<T> {
+  withTaskTimeout (timeout: number): PromisePool<T> {
     this.timeout = timeout
 
     return this
@@ -104,8 +104,8 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
    *
    * @returns {PromisePool}
    */
-  static withTimeout (timeout: number): PromisePool<unknown> {
-    return new this().withTimeout(timeout)
+  static withTaskTimeout (timeout: number): PromisePool<unknown> {
+    return new this().withTaskTimeout(timeout)
   }
 
   /**
@@ -117,7 +117,7 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
    */
   for<T> (items: T[]): PromisePool<T> {
     return typeof this.timeout === 'number'
-      ? new PromisePool<T>(items).withConcurrency(this.concurrency).withTimeout(this.timeout)
+      ? new PromisePool<T>(items).withConcurrency(this.concurrency).withTaskTimeout(this.timeout)
       : new PromisePool<T>(items).withConcurrency(this.concurrency)
   }
 
@@ -194,7 +194,7 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
     return new PromisePoolExecutor<T, ResultType>()
       .useConcurrency(this.concurrency)
       .useCorrespondingResults(this.shouldResultsCorrespond)
-      .withTimeout(this.timeout)
+      .withTaskTimeout(this.timeout)
       .withHandler(callback)
       .handleError(this.errorHandler)
       .onTaskStarted(this.onTaskStartedHandlers)

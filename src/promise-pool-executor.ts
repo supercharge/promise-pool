@@ -36,7 +36,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     /**
      * The maximum timeout in milliseconds for the item handler, or `undefined` to disable.
      */
-    timeout: number | undefined
+    taskTimeout: number | undefined
 
     /**
      * Determine whether the pool is stopped.
@@ -92,7 +92,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
       concurrency: 10,
       shouldResultsCorrespond: false,
       processedItems: [],
-      timeout: 0
+      taskTimeout: 0
     }
 
     this.handler = () => {}
@@ -136,8 +136,8 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    *
    * @returns {PromisePool}
    */
-  withTimeout (timeout: number | undefined): this {
-    this.meta.timeout = timeout
+  withTaskTimeout (timeout: number | undefined): this {
+    this.meta.taskTimeout = timeout
 
     return this
   }
@@ -168,12 +168,10 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   }
 
   /**
-   * Returns the timeout in ms.
-   *
-   * @returns {Number}
+   * Returns the task timeout in milliseconds.
    */
-  timeout (): number | undefined {
-    return this.meta.timeout
+  taskTimeout (): number | undefined {
+    return this.meta.taskTimeout
   }
 
   /**
@@ -403,7 +401,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
       throw ValidationError.createFrom('The first parameter for the .process(fn) method must be a function')
     }
 
-    const timeout = this.timeout()
+    const timeout = this.taskTimeout()
 
     if (!(timeout == null || (typeof timeout === 'number' && timeout >= 0))) {
       throw ValidationError.createFrom(`"timeout" must be undefined or a number. A number must be 0 or up. Received "${String(timeout)}" (${typeof timeout})`)
@@ -520,19 +518,25 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    * @returns {*}
    */
   async createTaskFor (item: T, index: number): Promise<any> {
-    if (this.timeout() === undefined) {
+    if (this.taskTimeout() === undefined) {
       return this.handler(item, index, this)
     }
 
     return Promise.race([
       this.handler(item, index, this),
-
-      new Promise<void>((_resolve, reject) => {
-        setTimeout(() => {
-          reject(new PromisePoolError(`Promise in pool timed out after ${this.timeout() as number}ms`, item))
-        }, this.timeout())
-      })
+      this.createTaskTimeout(item)
     ])
+  }
+
+  /**
+   * Returns a promise that times-out after the configured task timeout.
+   */
+  private async createTaskTimeout (item: T): Promise<void> {
+    return new Promise<void>((_resolve, reject) => {
+      setTimeout(() => {
+        reject(new PromisePoolError(`Promise in pool timed out after ${this.taskTimeout() as number}ms`, item))
+      }, this.taskTimeout())
+    })
   }
 
   /**
