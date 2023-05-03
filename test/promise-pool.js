@@ -616,7 +616,12 @@ test('useCorrespondingResults defaults results to notRun symbol', async () => {
       throw new Error('did not work')
     })
 
-  expect(results).toEqual([20, PromisePool.failed, 10, PromisePool.notRun])
+  expect(results).toEqual([
+    20,
+    PromisePool.failed,
+    PromisePool.notRun,
+    PromisePool.notRun,
+  ])
 })
 
 test('can timeout long-running handlers', async () => {

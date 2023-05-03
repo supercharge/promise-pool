@@ -41,19 +41,13 @@ test('iterates lazily', async () => {
       return item
     })
 
-  // The current implementation always fetches one more
-  // item than it needs. This has both advantages (the next
-  // task can start right away, without waiting for the next
-  // async item to be yielded, plus it's easier to implement)
-  // and disadvantages (it's slightly more wasteful on the
-  // iterable side).
   expect(logs).toEqual([
     'yielding 10',
     'yielding 20',
-    'yielding 30',
     'processed 10',
-    'yielding 40',
+    'yielding 30',
     'processed 20',
+    'yielding 40',
     'processed 30',
     'processed 40'
   ])

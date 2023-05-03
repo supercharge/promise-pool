@@ -475,6 +475,10 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
       this.startProcessing(item, index)
 
       index += 1
+
+      // don't consume the next item from iterable
+      // until there's a free slot for a new task
+      await this.waitForProcessingSlot()
     }
 
     return await this.drained()
