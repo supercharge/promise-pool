@@ -408,8 +408,8 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
       throw ValidationError.createFrom(`"timeout" must be undefined or a number. A number must be 0 or up. Received "${String(timeout)}" (${typeof timeout})`)
     }
 
-    if (!Array.isArray(this.items())) {
-      throw ValidationError.createFrom(`"items" must be an array. Received "${typeof this.items()}"`)
+    if (!this.areItemsValid()) {
+      throw ValidationError.createFrom(`"items" must be an array, an iterable or an async iterable. Received "${typeof this.items()}"`)
     }
 
     if (this.errorHandler && typeof this.errorHandler !== 'function') {
@@ -429,6 +429,14 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     })
 
     return this
+  }
+
+  private areItemsValid (): boolean {
+    const items = this.items() as any
+    if (Array.isArray(items)) return true
+    if (typeof items[Symbol.iterator] === 'function') return true
+    if (typeof items[Symbol.asyncIterator] === 'function') return true
+    return false
   }
 
   /**

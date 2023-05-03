@@ -78,7 +78,7 @@ test('ensures the items are an array', async () => {
   const pool = new PromisePool()
   const fn = () => {}
 
-  await expect(pool.for('non-array').process(fn)).rejects.toThrow(ValidationError)
+  await expect(pool.for(42).process(fn)).rejects.toThrow(ValidationError)
   await expect(await pool.for([]).process(fn)).toEqual({ errors: [], results: [] })
 })
 
