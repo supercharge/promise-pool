@@ -2,13 +2,13 @@
 
 import { ReturnValue } from './return-value'
 import { PromisePoolExecutor } from './promise-pool-executor'
-import { ErrorHandler, ProcessHandler, OnProgressCallback } from './contracts'
+import { ErrorHandler, ProcessHandler, OnProgressCallback, SomeIterable } from './contracts'
 
 export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = false> {
   /**
    * The processable items.
    */
-  private readonly items: T[]
+  private readonly items: SomeIterable<T>
 
   /**
    * The number of promises running concurrently.
@@ -50,11 +50,11 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
    *
    * @param {Object} options
    */
-  constructor (items?: T[]) {
+  constructor (items?: SomeIterable<T>) {
     this.timeout = undefined
     this.concurrency = 10
     this.shouldResultsCorrespond = false
-    this.items = items ?? []
+    this.items = items ?? [] as any
     this.errorHandler = undefined
     this.onTaskStartedHandlers = []
     this.onTaskFinishedHandlers = []
@@ -111,11 +111,11 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
   /**
    * Set the items to be processed in the promise pool.
    *
-   * @param {T[]} items
+   * @param {T[] | Iterable<T> | AsyncIterable<T>} items
    *
    * @returns {PromisePool}
    */
-  for<T> (items: T[]): PromisePool<T> {
+  for<T> (items: SomeIterable<T>): PromisePool<T> {
     return typeof this.timeout === 'number'
       ? new PromisePool<T>(items).withConcurrency(this.concurrency).withTaskTimeout(this.timeout)
       : new PromisePool<T>(items).withConcurrency(this.concurrency)
@@ -124,11 +124,11 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
   /**
    * Set the items to be processed in the promise pool.
    *
-   * @param {T[]} items
+   * @param {T[] | Iterable<T> | AsyncIterable<T>} items
    *
    * @returns {PromisePool}
    */
-  static for<T> (items: T[]): PromisePool<T> {
+  static for<T> (items: SomeIterable<T>): PromisePool<T> {
     return new this<T>().for(items)
   }
 

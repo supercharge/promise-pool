@@ -4,7 +4,7 @@ import { PromisePool } from './promise-pool'
 import { ReturnValue } from './return-value'
 import { PromisePoolError } from './promise-pool-error'
 import { StopThePromisePoolError } from './stop-the-promise-pool-error'
-import { ErrorHandler, ProcessHandler, OnProgressCallback, Statistics, Stoppable, UsesConcurrency } from './contracts'
+import { ErrorHandler, ProcessHandler, OnProgressCallback, Statistics, Stoppable, UsesConcurrency, SomeIterable } from './contracts'
 import { ValidationError } from './validation-error'
 
 export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, Statistics<T> {
@@ -15,7 +15,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     /**
      * The list of items to process.
      */
-    items: T[]
+    items: SomeIterable<T>
 
     /**
      * The list of processed items.
@@ -181,7 +181,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    *
    * @returns {PromisePoolExecutor}
    */
-  for (items: T[]): this {
+  for (items: SomeIterable<T>): this {
     this.meta.items = items
 
     return this
@@ -190,19 +190,20 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   /**
    * Returns the list of items to process.
    *
-   * @returns {T[]}
+   * @returns {T[] | Iterable<T> | AsyncIterable<T>}
    */
-  items (): T[] {
+  items (): SomeIterable<T> {
     return this.meta.items
   }
 
   /**
-   * Returns the number of items to process.
+   * Returns the number of items to process, or `NaN` if items are not an array.
    *
    * @returns {Number}
    */
   itemsCount (): number {
-    return this.items().length
+    const items = this.items()
+    return Array.isArray(items) ? items.length : NaN
   }
 
   /**
@@ -253,7 +254,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   }
 
   /**
-   * Returns the percentage progress of items that have been processed.
+   * Returns the percentage progress of items that have been processed, or `NaN` if items is not an array.
    */
   processedPercentage (): number {
     return (this.processedCount() / this.itemsCount()) * 100
@@ -434,10 +435,12 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    * Prefill the results array with `notRun` symbol values if results should correspond.
    */
   private prepareResultsArray (): this {
-    if (this.shouldUseCorrespondingResults()) {
-      this.meta.results = Array(this.items().length).fill(PromisePool.notRun)
-    }
+    const items = this.items()
 
+    if (!Array.isArray(items)) return this
+    if (!this.shouldUseCorrespondingResults()) return this
+
+    this.meta.results = Array(items.length).fill(PromisePool.notRun)
     return this
   }
 
@@ -450,13 +453,20 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    * @returns {Promise}
    */
   async process (): Promise<ReturnValue<T, R>> {
-    for (const [index, item] of this.items().entries()) {
+    let index = 0
+    for await (const item of this.items()) {
       if (this.isStopped()) {
         break
       }
 
+      if (this.shouldUseCorrespondingResults()) {
+        this.results()[index] = PromisePool.notRun;
+      }
+
       await this.waitForProcessingSlot()
       this.startProcessing(item, index)
+
+      index += 1
     }
 
     return await this.drained()
