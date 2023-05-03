@@ -52,3 +52,5 @@ test('iterates lazily', async () => {
     'processed 40'
   ])
 })
+
+test.run()

@@ -115,23 +115,25 @@ test('stops on time with timed stop call', async () => {
   const timeouts = [100, 200, 300]
   let processedSecond = false
 
-  try {
-    await PromisePool
-      .withConcurrency(1)
-      .for(timeouts)
-      .process(async (timeout, _, pool) => {
-        // simulate user stopping pool after 50ms
-        pause(50).then(() => pool.stop()).catch(() => void 0)
+  const { results } = await PromisePool
+    .withConcurrency(1)
+    .for(timeouts)
+    .process(async (timeout, _, pool) => {
+      // simulate user stopping pool after 50ms
+      pause(50).then(() => pool.stop()).catch(() => void 0)
 
-        if (timeout === 200) {
-          processedSecond = true
-        }
-        // simulate load
-        await pause(timeout)
-        return timeout
-      })
-  } catch (_) {}
+      if (timeout === 200) {
+        processedSecond = true
+      }
+      // simulate load
+      await pause(timeout)
+      return timeout
+    })
   
+  // should only have finished the current task
+  expect(results).toEqual([100])
+
+  // should not have started the second task
   expect(processedSecond).toEqual(false)
 })
 
