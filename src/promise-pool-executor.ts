@@ -468,7 +468,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
       }
 
       if (this.shouldUseCorrespondingResults()) {
-        this.results()[index] = PromisePool.notRun;
+        this.results()[index] = PromisePool.notRun
       }
 
       await this.waitForProcessingSlot()
