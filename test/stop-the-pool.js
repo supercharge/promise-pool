@@ -80,7 +80,61 @@ test('stops the pool from async error handler', async () => {
       return timeout
     })
 
-  expect(results).toEqual([30])
+  expect(results).toEqual([])
+})
+
+test('stops on time with async error handler', async () => {
+  const timeouts = [50, 40, 30, 20, 10]
+
+  const { results } = await PromisePool
+    .for(timeouts)
+    .withConcurrency(2)
+    .useCorrespondingResults()
+    .handleError(async (_, __, pool) => {
+      pool.stop()
+    })
+    .process(async (timeout) => {
+      if (timeout === 30) {
+        throw new Error('stop the pool')
+      }
+
+      await pause(timeout)
+      return timeout
+    })
+
+  expect(results).toEqual([
+    50,
+    40,
+    PromisePool.failed,
+    PromisePool.notRun,
+    PromisePool.notRun,
+  ])
+})
+
+test('stops on time with timed stop call', async () => {
+  const timeouts = [100, 200, 300]
+  let processedSecond = false
+
+  const { results } = await PromisePool
+    .withConcurrency(1)
+    .for(timeouts)
+    .process(async (timeout, _, pool) => {
+      // simulate user stopping pool after 50ms
+      pause(50).then(() => pool.stop()).catch(() => void 0)
+
+      if (timeout === 200) {
+        processedSecond = true
+      }
+      // simulate load
+      await pause(timeout)
+      return timeout
+    })
+  
+  // should only have finished the current task
+  expect(results).toEqual([100])
+
+  // should not have started the second task
+  expect(processedSecond).toEqual(false)
 })
 
 test.run()

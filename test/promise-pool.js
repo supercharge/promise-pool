@@ -78,7 +78,7 @@ test('ensures the items are an array', async () => {
   const pool = new PromisePool()
   const fn = () => {}
 
-  await expect(pool.for('non-array').process(fn)).rejects.toThrow(ValidationError)
+  await expect(pool.for(42).process(fn)).rejects.toThrow(ValidationError)
   await expect(await pool.for([]).process(fn)).toEqual({ errors: [], results: [] })
 })
 
@@ -616,7 +616,12 @@ test('useCorrespondingResults defaults results to notRun symbol', async () => {
       throw new Error('did not work')
     })
 
-  expect(results).toEqual([20, PromisePool.failed, 10, PromisePool.notRun])
+  expect(results).toEqual([
+    20,
+    PromisePool.failed,
+    PromisePool.notRun,
+    PromisePool.notRun,
+  ])
 })
 
 test('can timeout long-running handlers', async () => {
