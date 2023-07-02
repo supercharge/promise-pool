@@ -472,9 +472,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
         this.results()[index] = PromisePool.notRun
       }
 
-      await this.waitForProcessingSlot()
       this.startProcessing(item, index)
-
       index += 1
 
       // don't consume the next item from iterable
