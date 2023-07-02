@@ -11,7 +11,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   /**
    * Stores the internal properties.
    */
-  private meta: {
+  private readonly meta: {
     /**
      * The list of items to process.
      */
@@ -462,6 +462,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    */
   async process (): Promise<ReturnValue<T, R>> {
     let index = 0
+
     for await (const item of this.items()) {
       if (this.isStopped()) {
         break
