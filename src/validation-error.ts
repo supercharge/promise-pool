@@ -9,7 +9,9 @@ export class ValidationError extends Error {
   constructor (message?: string) {
     super(message)
 
-    Error.captureStackTrace(this, this.constructor)
+    if (Error.captureStackTrace && typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, this.constructor)
+    }
   }
 
   /**
