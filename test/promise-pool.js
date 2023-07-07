@@ -379,7 +379,7 @@ test('fails with string', async () => {
   ).toBe(true)
 })
 
-test('fails with Error and stacktrace', async () => {
+test('fails with Error', async () => {
   const ids = [1, 2, 3]
 
   const { errors } = await PromisePool

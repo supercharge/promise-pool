@@ -25,7 +25,9 @@ export class PromisePoolError<T, E = any> extends Error {
     this.name = this.constructor.name
     this.message = this.messageFrom(error)
 
-    Error.captureStackTrace(this, this.constructor)
+    if (Error.captureStackTrace && typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, this.constructor)
+    }
   }
 
   /**
