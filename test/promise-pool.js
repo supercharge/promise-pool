@@ -394,7 +394,7 @@ test('fails with Error (and stacktrace)', async () => {
   ).toBe(true)
 
   expect(
-    errors.every(error => typeof error.stack === 'object')
+    errors.every(error => typeof error.stack === 'string')
   ).toBe(true)
 })
 
