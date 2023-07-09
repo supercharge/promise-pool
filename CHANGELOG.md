@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.0.0](https://github.com/supercharge/promise-pool/compare/v2.4.0...v3.0.0) - 2023-07-09
+
+### Added
+- [Accept iterables and async iterables](https://github.com/supercharge/promise-pool/pull/72) and not just arrays
+- add performance testing script in `performance` directory: this is helpful to detect whether the promise pool is significantly slower than `Promise.all`
+
+### Updated
+- bump dependencies
+- [call `Error.captureStackTrace` only when available](https://github.com/supercharge/promise-pool/issues/74)
+
+### Breaking Changes
+- require Node.js v16
+- require `ecmaScript` 2021
+- the `pool.items()` method changed from the narrower type `T[]` to the wider type `T[] | Iterable<T> | AsyncIterable<T>` which might be a breaking change for your code base
+
+
 ## [2.4.0](https://github.com/supercharge/promise-pool/compare/v2.3.2...v2.4.0) - 2023-02-10
 
 ### Added
