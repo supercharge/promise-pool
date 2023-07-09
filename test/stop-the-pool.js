@@ -107,7 +107,7 @@ test('stops on time with async error handler', async () => {
     40,
     PromisePool.failed,
     PromisePool.notRun,
-    PromisePool.notRun,
+    PromisePool.notRun
   ])
 })
 
@@ -120,7 +120,7 @@ test('stops on time with timed stop call', async () => {
     .for(timeouts)
     .process(async (timeout, _, pool) => {
       // simulate user stopping pool after 50ms
-      pause(50).then(() => pool.stop()).catch(() => void 0)
+      pause(50).then(() => pool.stop()).catch(() => {})
 
       if (timeout === 200) {
         processedSecond = true
@@ -129,7 +129,7 @@ test('stops on time with timed stop call', async () => {
       await pause(timeout)
       return timeout
     })
-  
+
   // should only have finished the current task
   expect(results).toEqual([100])
 

@@ -379,7 +379,7 @@ test('fails with string', async () => {
   ).toBe(true)
 })
 
-test('fails with Error', async () => {
+test('fails with Error (and stacktrace)', async () => {
   const ids = [1, 2, 3]
 
   const { errors } = await PromisePool
@@ -391,6 +391,10 @@ test('fails with Error', async () => {
 
   expect(
     errors.every(error => error.message === 'failing')
+  ).toBe(true)
+
+  expect(
+    errors.every(error => typeof error.stack === 'object')
   ).toBe(true)
 })
 
@@ -620,7 +624,7 @@ test('useCorrespondingResults defaults results to notRun symbol', async () => {
     20,
     PromisePool.failed,
     PromisePool.notRun,
-    PromisePool.notRun,
+    PromisePool.notRun
   ])
 })
 

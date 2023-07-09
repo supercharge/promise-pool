@@ -9,8 +9,8 @@ const pause = timeout => new Promise(resolve => setTimeout(resolve, timeout))
 const fakeClock = {
   time: 0,
   schedule: [],
-  pause: (t) => new Promise(res => {
-    fakeClock.schedule.push([fakeClock.time + t, res])
+  pause: (t) => new Promise(resolve => {
+    fakeClock.schedule.push([fakeClock.time + t, resolve])
   }),
   run: async () => {
     await pause(0)
@@ -49,7 +49,7 @@ test('iterates lazily', async () => {
   const logs = []
 
   const iterable = {
-    *[Symbol.iterator]() {
+    * [Symbol.iterator] () {
       for (const item of items) {
         logs.push(`yielded ${item}`)
         yield item
@@ -85,7 +85,7 @@ test('supports async iterable in the static .for method', async () => {
   const logs = []
 
   const iterable = {
-    async *[Symbol.asyncIterator]() {
+    async * [Symbol.asyncIterator] () {
       for (const item of items) {
         logs.push(`loaded ${item.join(',')}`)
         await pause(item[0])
@@ -117,7 +117,7 @@ test('supports async iterable in the static .for method', async () => {
     'loaded 40,0',
     'yielded 40,0',
     'processed 40,0',
-    'processed 10,500',
+    'processed 10,500'
   ])
 
   expect(results).toEqual([20, 30, 40, 10])
@@ -146,21 +146,21 @@ test('supports async iterable in the static .for method', async () => {
 // which ensures that things will happen in the right order – that is, things which are
 // scheduled to happen after, say, 70ms will hapen before things which are scheduled to
 // happen after 71ms. However, the actual time that elapses between these operations is
-// completely arbitrary. 
+// completely arbitrary.
 
 test('schedules async iterables efficiently', async () => {
   const logs = []
 
-  async function* generateIterable() {
+  async function * generateIterable () {
     let index = 0
     let sequentialWait = 10
     let parallelWait = 10
 
     while (parallelWait > 1) {
-      logs.push(`loaded ${index+1} at ${fakeClock.time}`)
+      logs.push(`loaded ${index + 1} at ${fakeClock.time}`)
       await fakeClock.pause(sequentialWait)
 
-      logs.push(`yielded ${index+1} at ${fakeClock.time}`)
+      logs.push(`yielded ${index + 1} at ${fakeClock.time}`)
       yield parallelWait
 
       sequentialWait -= 2
@@ -175,7 +175,7 @@ test('schedules async iterables efficiently', async () => {
     .withConcurrency(3)
     .process(async (timeout, index) => {
       await fakeClock.pause(timeout)
-      logs.push(`processed ${index+1} at ${fakeClock.time}`)
+      logs.push(`processed ${index + 1} at ${fakeClock.time}`)
     })
 
   await fakeClock.run()
@@ -207,7 +207,7 @@ test('schedules async iterables efficiently', async () => {
     'yielded 9 at 39',
     'processed 7 at 40',
     'processed 8 at 40',
-    'processed 9 at 41',
+    'processed 9 at 41'
   ])
 })
 
