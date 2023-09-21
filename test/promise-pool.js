@@ -630,19 +630,20 @@ test('useCorrespondingResults defaults results to notRun symbol', async () => {
 
 test('can timeout long-running handlers', async () => {
   const timers = [1, 2, 3, 4]
+  const leeway = 5
 
   const { results, errors } = await PromisePool
     .withTaskTimeout(10)
     .for(timers)
     .process(async (timer) => {
-      const computed = 10 * timer
+      const computed = 10 * timer - leeway
       await pause(computed)
 
       return computed
     })
 
   // only the first item resolves
-  expect(results).toEqual([10])
+  expect(results).toEqual([5])
 
   // items 2, 3, and 4 time out
   expect(errors.length).toEqual(3)
