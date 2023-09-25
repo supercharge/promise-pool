@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.1.0](https://github.com/supercharge/promise-pool/compare/v3.0.0...v3.1.0) - 2023-09-xx
+
+### Added
+- clear timers from task timeouts to remove them from the event loop: this is helpful to clear up resources for long-running timeouts and fastly resolving tasks. If not cleared, the timeouts stay in the event loop until they’re due
+- add keep error handler when calling `pool.handleError` after `pool.for`: previously the error handler was lost
+
+### Updated
+- bump dependencies
+
+
 ## [3.0.0](https://github.com/supercharge/promise-pool/compare/v2.4.0...v3.0.0) - 2023-07-09
 
 ### Added
