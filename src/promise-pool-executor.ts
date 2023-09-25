@@ -543,21 +543,27 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
       return this.handler(item, index, this)
     }
 
+    const [timer, canceller] = this.createTaskTimeout(item)
     return Promise.race([
       this.handler(item, index, this),
-      this.createTaskTimeout(item)
-    ])
+      timer(),
+    ]).finally(canceller)
   }
 
   /**
-   * Returns a promise that times-out after the configured task timeout.
+   * Returns a tuple of a timer function and a canceller function that
+   * times-out after the configured task timeout.
    */
-  private async createTaskTimeout (item: T): Promise<void> {
-    return new Promise<void>((_resolve, reject) => {
-      setTimeout(() => {
-        reject(new PromisePoolError(`Promise in pool timed out after ${this.taskTimeout() as number}ms`, item))
-      }, this.taskTimeout())
-    })
+  private createTaskTimeout (item: T): [() => Promise<void>, () => void] {
+    let timerId: ReturnType<typeof setTimeout> | undefined
+    const timer: () => Promise<void> = async () =>
+      new Promise<void>((_resolve, reject) => {
+        timerId = setTimeout(() => {
+          reject(new PromisePoolError(`Promise in pool timed out after ${this.taskTimeout() as number}ms`, item))
+        }, this.taskTimeout())
+      })
+    const canceller: () => void = () => clearTimeout(timerId)
+    return [timer, canceller]
   }
 
   /**
