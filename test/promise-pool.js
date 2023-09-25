@@ -269,7 +269,7 @@ test('fails when not passing a function for the error handler', async () => {
   await expect(pool.process(() => {})).rejects.toThrow()
 })
 
-test.only('keeps error handler when calling pool.handleError before pool.for', async () => {
+test('keeps error handler when calling pool.handleError before pool.for', async () => {
   const ids = [1, 2, 3, 4]
   const collectedItemsOnError = []
 
