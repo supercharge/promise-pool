@@ -433,9 +433,11 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
 
   private areItemsValid (): boolean {
     const items = this.items() as any
+
     if (Array.isArray(items)) return true
     if (typeof items[Symbol.iterator] === 'function') return true
     if (typeof items[Symbol.asyncIterator] === 'function') return true
+
     return false
   }
 
@@ -449,6 +451,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     if (!this.shouldUseCorrespondingResults()) return this
 
     this.meta.results = Array(items.length).fill(PromisePool.notRun)
+
     return this
   }
 
@@ -544,6 +547,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     }
 
     const [timer, canceller] = this.createTaskTimeout(item)
+
     return Promise.race([
       this.handler(item, index, this),
       timer(),
@@ -556,13 +560,16 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
    */
   private createTaskTimeout (item: T): [() => Promise<void>, () => void] {
     let timerId: ReturnType<typeof setTimeout> | undefined
+
     const timer: () => Promise<void> = async () =>
       new Promise<void>((_resolve, reject) => {
         timerId = setTimeout(() => {
-          reject(new PromisePoolError(`Promise in pool timed out after ${this.taskTimeout() as number}ms`, item))
+          reject(new PromisePoolError(`Task in promise pool timed out after ${this.taskTimeout() as number}ms`, item))
         }, this.taskTimeout())
       })
+
     const canceller: () => void = () => clearTimeout(timerId)
+
     return [timer, canceller]
   }
 
