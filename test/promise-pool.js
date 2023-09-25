@@ -269,6 +269,27 @@ test('fails when not passing a function for the error handler', async () => {
   await expect(pool.process(() => {})).rejects.toThrow()
 })
 
+test.only('keeps error handler when calling pool.handleError before pool.for', async () => {
+  const ids = [1, 2, 3, 4]
+  const collectedItemsOnError = []
+
+  const { results, errors } = await PromisePool
+    .withConcurrency(2)
+    .handleError((_, item) => {
+      collectedItemsOnError.push(item)
+    })
+    .for(ids)
+    .process(id => {
+      if (id === 3) throw new Error('Oh no, not a 3.')
+
+      return id
+    })
+
+  expect(errors).toEqual([])
+  expect(results).toEqual([1, 2, 4])
+  expect(collectedItemsOnError).toEqual([3])
+})
+
 test('should handle error and continue processing', async () => {
   const ids = [1, 2, 3, 4]
   const collectedItemsOnError = []
