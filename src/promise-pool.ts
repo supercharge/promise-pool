@@ -53,11 +53,11 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
   constructor (items?: SomeIterable<T>) {
     this.timeout = undefined
     this.concurrency = 10
-    this.shouldResultsCorrespond = false
     this.items = items ?? []
     this.errorHandler = undefined
     this.onTaskStartedHandlers = []
     this.onTaskFinishedHandlers = []
+    this.shouldResultsCorrespond = false
   }
 
   /**
@@ -111,14 +111,20 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
   /**
    * Set the items to be processed in the promise pool.
    *
-   * @param {T[] | Iterable<T> | AsyncIterable<T>} items
+   * @param {SomeIterable<ItemType>} items
    *
    * @returns {PromisePool}
    */
-  for<T> (items: SomeIterable<T>): PromisePool<T> {
+  for<ItemType> (items: SomeIterable<ItemType>): PromisePool<ItemType> {
+    const pool = new PromisePool<ItemType>(items).withConcurrency(this.concurrency)
+
+    if (typeof this.errorHandler === 'function') {
+      pool.handleError(this.errorHandler as unknown as ErrorHandler<ItemType>)
+    }
+
     return typeof this.timeout === 'number'
-      ? new PromisePool<T>(items).withConcurrency(this.concurrency).withTaskTimeout(this.timeout)
-      : new PromisePool<T>(items).withConcurrency(this.concurrency)
+      ? pool.withTaskTimeout(this.timeout)
+      : pool
   }
 
   /**
