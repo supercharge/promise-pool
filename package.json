@@ -10,7 +10,7 @@
     "@supercharge/eslint-config-typescript": "~3.0.1",
     "@supercharge/tsconfig": "~4.0.0",
     "c8": "~8.0.1",
-    "eslint": "~8.50.0",
+    "eslint": "~8.56.0",
     "expect": "~29.7.0",
     "typescript": "~5.2.2",
     "uvu": "~0.5.6"
