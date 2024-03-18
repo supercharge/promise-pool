@@ -52,5 +52,6 @@
     "test:coverage": "c8 --include=dist npm run test:run && npm run test:report",
     "test:report": "c8 report --reporter=html"
   },
+  "sideEffects": false,
   "types": "dist"
 }
