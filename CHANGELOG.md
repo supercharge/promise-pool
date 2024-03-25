@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.2.0](https://github.com/supercharge/promise-pool/compare/v3.1.1...v3.2.0) - 2024-03-25
+
+### Added
+- add `"sideEffects": false` to `package.json` [#83](https://github.com/supercharge/promise-pool/issues/83)
+
+### Updated
+- bump dependencies
+
+
 ## [3.1.1](https://github.com/supercharge/promise-pool/compare/v3.1.0...v3.1.1) - 2024-01-31
 
 ### Updated
