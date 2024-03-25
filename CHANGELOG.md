@@ -6,6 +6,9 @@
 - add `"sideEffects": false` to `package.json` [#83](https://github.com/supercharge/promise-pool/issues/83)
 
 ### Updated
+- updated types for the handler function in the promise pool processor
+
+### Updated
 - bump dependencies
 
 

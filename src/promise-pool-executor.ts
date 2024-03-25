@@ -2,10 +2,10 @@
 
 import { PromisePool } from './promise-pool'
 import { ReturnValue } from './return-value'
+import { ValidationError } from './validation-error'
 import { PromisePoolError } from './promise-pool-error'
 import { StopThePromisePoolError } from './stop-the-promise-pool-error'
 import { ErrorHandler, ProcessHandler, OnProgressCallback, Statistics, Stoppable, UsesConcurrency, SomeIterable } from './contracts'
-import { ValidationError } from './validation-error'
 
 export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, Statistics<T> {
   /**
@@ -62,7 +62,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   /**
    * The async processing function receiving each item from the `items` array.
    */
-  private handler: (item: T, index: number, pool: Stoppable & UsesConcurrency) => any
+  private handler: ProcessHandler<T, R>
 
   /**
    * The async error handling function.
@@ -95,7 +95,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
       taskTimeout: 0
     }
 
-    this.handler = () => {}
+    this.handler = (item) => item as any
     this.errorHandler = undefined
     this.onTaskStartedHandlers = []
     this.onTaskFinishedHandlers = []
