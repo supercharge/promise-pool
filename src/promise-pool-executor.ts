@@ -431,14 +431,16 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     return this
   }
 
+  /**
+   * Determine whether the provided items are processable by the pool. We’re
+   * handling arrays and (async) iterables. Everything else is not valid.
+   */
   private areItemsValid (): boolean {
     const items = this.items() as any
 
-    if (Array.isArray(items)) return true
-    if (typeof items[Symbol.iterator] === 'function') return true
-    if (typeof items[Symbol.asyncIterator] === 'function') return true
-
-    return false
+    return Array.isArray(items) ||
+            typeof items[Symbol.iterator] === 'function' ||
+            typeof items[Symbol.asyncIterator] === 'function'
   }
 
   /**
@@ -447,10 +449,9 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   private prepareResultsArray (): this {
     const items = this.items()
 
-    if (!Array.isArray(items)) return this
-    if (!this.shouldUseCorrespondingResults()) return this
-
-    this.meta.results = Array(items.length).fill(PromisePool.notRun)
+    if (Array.isArray(items) && this.shouldUseCorrespondingResults()) {
+      this.meta.results = Array(items.length).fill(PromisePool.notRun)
+    }
 
     return this
   }
