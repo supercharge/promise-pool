@@ -3,12 +3,11 @@
 const { PromisePool } = require('../dist')
 
 /**
- * Very basic, non-optimal shuffle function
- * to randomly order the items.
+ * Very basic, non-optimal shuffle function to randomly order the items.
  *
- * @param {Array} array
+ * @param {any[]} array
  *
- * @returns {Array}
+ * @returns {any[]}
  */
 function shuffle (array) {
   return array.sort(() => Math.random() - 0.5)
@@ -41,4 +40,4 @@ async function run () {
   console.log(`Errors -> ${errors.length ? errors : 'none'}`)
 }
 
-run()
+run().catch(error => console.error('Failed to process the promise pool', error))
