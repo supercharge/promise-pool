@@ -32,11 +32,6 @@ export class PromisePoolError<T, E = any> extends Error {
 
   /**
    * Returns a new promise pool error instance wrapping the `error` and `item`.
-   *
-   * @param {*} error
-   * @param {*} item
-   *
-   * @returns {PromisePoolError}
    */
   static createFrom<T, E = any>(error: E, item: T): PromisePoolError<T> {
     return new this(error, item)
@@ -44,10 +39,6 @@ export class PromisePoolError<T, E = any> extends Error {
 
   /**
    * Returns the error message from the given `error`.
-   *
-   * @param {*} error
-   *
-   * @returns {String}
    */
   private messageFrom (error: any): string {
     if (error instanceof Error) {

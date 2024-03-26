@@ -47,8 +47,6 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
 
   /**
    * Instantiates a new promise pool with a default `concurrency: 10` and `items: []`.
-   *
-   * @param {Object} options
    */
   constructor (items?: SomeIterable<T>) {
     this.timeout = undefined
@@ -62,10 +60,6 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
 
   /**
    * Set the number of tasks to process concurrently in the promise pool.
-   *
-   * @param {Integer} concurrency
-   *
-   * @returns {PromisePool}
    */
   withConcurrency (concurrency: number): PromisePool<T> {
     this.concurrency = concurrency
@@ -75,10 +69,6 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
 
   /**
    * Set the number of tasks to process concurrently in the promise pool.
-   *
-   * @param {Number} concurrency
-   *
-   * @returns {PromisePool}
    */
   static withConcurrency (concurrency: number): PromisePool<unknown> {
     return new this().withConcurrency(concurrency)
@@ -86,10 +76,6 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
 
   /**
    * Set the timeout in milliseconds for the pool handler.
-   *
-   * @param {Number} timeout
-   *
-   * @returns {PromisePool}
    */
   withTaskTimeout (timeout: number): PromisePool<T> {
     this.timeout = timeout
@@ -99,10 +85,6 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
 
   /**
    * Set the timeout in milliseconds for the pool handler.
-   *
-   * @param {Number} timeout
-   *
-   * @returns {PromisePool}
    */
   static withTaskTimeout (timeout: number): PromisePool<unknown> {
     return new this().withTaskTimeout(timeout)
@@ -110,10 +92,6 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
 
   /**
    * Set the items to be processed in the promise pool.
-   *
-   * @param {SomeIterable<ItemType>} items
-   *
-   * @returns {PromisePool}
    */
   for<ItemType> (items: SomeIterable<ItemType>): PromisePool<ItemType> {
     const pool = new PromisePool<ItemType>(items).withConcurrency(this.concurrency)
@@ -129,10 +107,6 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
 
   /**
    * Set the items to be processed in the promise pool.
-   *
-   * @param {T[] | Iterable<T> | AsyncIterable<T>} items
-   *
-   * @returns {PromisePool}
    */
   static for<T> (items: SomeIterable<T>): PromisePool<T> {
     return new this<T>().for(items)
@@ -140,10 +114,6 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
 
   /**
    * Set the error handler function to execute when an error occurs.
-   *
-   * @param {ErrorHandler<T>} handler
-   *
-   * @returns {PromisePool}
    */
   handleError (handler: ErrorHandler<T>): PromisePool<T> {
     this.errorHandler = handler
@@ -153,10 +123,6 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
 
   /**
    * Assign the given callback `handler` function to run when a task starts.
-   *
-   * @param {OnProgressCallback<T>} handler
-   *
-   * @returns {PromisePool}
    */
   onTaskStarted (handler: OnProgressCallback<T>): PromisePool<T> {
     this.onTaskStartedHandlers.push(handler)
@@ -166,10 +132,6 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
 
   /**
    * Assign the given callback `handler` function to run when a task finished.
-   *
-   * @param {OnProgressCallback<T>} handler
-   *
-   * @returns {PromisePool}
    */
   onTaskFinished (handler: OnProgressCallback<T>): PromisePool<T> {
     this.onTaskFinishedHandlers.push(handler)
@@ -189,10 +151,6 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
   /**
    * Starts processing the promise pool by iterating over the items
    * and running each item through the async `callback` function.
-   *
-   * @param {ProcessHandler} The async processing function receiving each item from the `items` array.
-   *
-   * @returns Promise<{ results, errors }>
    */
   async process<ResultType, ErrorType = any> (
     callback: ProcessHandler<T, ResultType>

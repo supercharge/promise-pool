@@ -3,8 +3,6 @@
 export class ValidationError extends Error {
   /**
    * Create a new instance for the given `message`.
-   *
-   * @param message  The error message
    */
   constructor (message?: string) {
     super(message)
