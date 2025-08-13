@@ -1,6 +1,6 @@
-'use strict'
+//  // This line is removed as part of the conversion to ESM
 
-const { PromisePool } = require('../dist')
+import { PromisePool } from '../dist/index.js';
 
 /**
  * Very basic, non-optimal shuffle function to randomly order the items.

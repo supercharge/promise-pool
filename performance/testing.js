@@ -1,7 +1,6 @@
-'use strict'
-
-const { PromisePool } = require('../dist')
-const { setTimeout } = require('timers/promises')
+//  // Removed for ESM
+import { PromisePool } from '../dist/index.js';
+import { setTimeout } from 'timers/promises';
 
 // const batchSize = 10 * 1000
 const batchSize = 50 * 1000

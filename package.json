@@ -1,22 +1,21 @@
 {
   "name": "@supercharge/promise-pool",
   "description": "Map-like, concurrent promise processing for Node.js",
-  "version": "3.2.0",
-  "author": "Marcus Pöhls <marcus@superchargejs.com>",
+  "version": "4.0.0",
+  "authors": ["Marcus Pöhls <marcus@superchargejs.com>", "Daniel Maricic <daniel@woss.io>"],
   "bugs": {
     "url": "https://github.com/superchargejs/promise-pool/issues"
   },
   "devDependencies": {
-    "@supercharge/eslint-config-typescript": "~3.0.1",
-    "@supercharge/tsconfig": "~4.0.0",
-    "c8": "~8.0.1",
-    "eslint": "~8.57.0",
-    "expect": "~29.7.0",
-    "typescript": "~5.4.3",
-    "uvu": "~0.5.6"
+    "@biomejs/biome": "^2.1.4",
+    "@vitest/coverage-v8": "3.2.4",
+    "@vitest/ui": "3.2.4",
+    "husky": "^9.1.7",
+    "typescript": "~5.9.2",
+    "vitest": "~3.2.4"
   },
   "engines": {
-    "node": ">=8"
+    "node": ">=18"
   },
   "homepage": "https://github.com/superchargejs/promise-pool",
   "keywords": [
@@ -33,7 +32,26 @@
   "files": [
     "dist"
   ],
-  "main": "dist",
+  "main": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./promise-pool-executor": {
+      "import": "./dist/promise-pool-executor.js",
+      "types": "./dist/promise-pool-executor.d.ts"
+    },
+    "./promise-pool-error": {
+      "import": "./dist/promise-pool-error.js",
+      "types": "./dist/promise-pool-error.d.ts"
+    },
+    "./validation-error": {
+      "import": "./dist/validation-error.js",
+      "types": "./dist/validation-error.d.ts"
+    }
+  },
+  "type": "module",
   "publishConfig": {
     "access": "public"
   },
@@ -44,14 +62,14 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "lint": "eslint src --ext .js,.ts",
-    "lint:fix": "npm run lint -- --fix",
-    "test": "npm run build && npm run test:coverage",
-    "test:full": "npm run build && npm run lint && npm run test:coverage",
-    "test:run": "uvu",
-    "test:coverage": "c8 --include=dist npm run test:run && npm run test:report",
-    "test:report": "c8 report --reporter=html"
+    "lint": "biome check .",
+    "lint:fix": "biome check . --fix",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "format": "biome format .",
+    "prepare": "husky"
   },
   "sideEffects": false,
-  "types": "dist"
+  "types": "dist",
+  "packageManager": "pnpm@10.5.2"
 }

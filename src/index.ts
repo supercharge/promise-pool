@@ -1,12 +1,10 @@
-'use strict'
+import { PromisePool } from "./promise-pool.js";
 
-import { PromisePool } from './promise-pool'
+export default PromisePool;
 
-export default PromisePool
-
-export * from './contracts'
-export * from './promise-pool'
-export * from './promise-pool-error'
-export * from './return-value'
-export * from './stop-the-promise-pool-error'
-export * from './validation-error'
+export * from "./contracts.js";
+export * from "./promise-pool.js";
+export * from "./promise-pool-error.js";
+export * from "./return-value.js";
+export * from "./stop-the-promise-pool-error.js";
+export * from "./validation-error.js";

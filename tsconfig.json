@@ -1,15 +1,21 @@
 {
-  "extends": "@supercharge/tsconfig",
   "compilerOptions": {
     "outDir": "./dist",
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "declaration": true,
+    "isolatedDeclarations": true,
+    "target": "es2024",
+    "rootDir": "./src"
   },
   "include": [
     "./**/*"
   ],
   "exclude": [
     "./node_modules",
-    "./test",
-    "./dist"
+    "./dist",
+    "vitest.config.ts",
+    "**/*.test.ts"
   ]
 }

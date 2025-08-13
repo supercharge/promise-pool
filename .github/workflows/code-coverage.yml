@@ -1,0 +1,45 @@
+name: Code Coverage
+
+on:
+  pull_request:
+  merge_group:
+
+concurrency:
+  group: ${{ github.workflow }}
+  # We want to let merge_group jobs run in parallel, as it is a special case
+  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    permissions:
+      # Required to checkout the code
+      contents: read
+      # Required to put a comment into the pull-request
+      pull-requests: write
+    steps:
+    - name: Git checkout
+      uses: actions/checkout@v4
+    
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+
+    - name: Use Node.js 24
+      uses: actions/setup-node@v4
+      with:
+        node-version: 24
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Run tests
+      run: pnpm test:coverage
+  
+    - name: 'Report Coverage'
+      # Set if: always() to also generate the report if tests are failing
+      # Only works if you set `reportOnFailure: true` in your vite config as specified above
+      if: always() 
+      uses:  davelosert/vitest-coverage-report-action@v2
+    
+  

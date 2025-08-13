@@ -20,7 +20,8 @@ package-lock.json
 yarn.lock
 
 # code coverage folder
-coverage
+temp/
+coverage/
 .nyc_output
 
 # Secrets
