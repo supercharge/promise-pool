@@ -3,6 +3,22 @@
   "description": "Map-like, concurrent promise processing for Node.js",
   "version": "3.2.0",
   "author": "Marcus Pöhls <marcus@superchargejs.com>",
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    }
+  },
   "bugs": {
     "url": "https://github.com/superchargejs/promise-pool/issues"
   },
@@ -16,7 +32,7 @@
     "uvu": "~0.5.6"
   },
   "engines": {
-    "node": ">=8"
+    "node": ">=16"
   },
   "homepage": "https://github.com/superchargejs/promise-pool",
   "keywords": [
@@ -33,7 +49,6 @@
   "files": [
     "dist"
   ],
-  "main": "dist",
   "publishConfig": {
     "access": "public"
   },
@@ -42,8 +57,13 @@
     "url": "git+https://github.com/superchargejs/promise-pool.git"
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "npm run build:esm && npm run build:cjs && npm run build:cjs-package",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:cjs-package": "echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean",
+    "dev": "tsc -p tsconfig.esm.json --watch",
     "lint": "eslint src --ext .js,.ts",
     "lint:fix": "npm run lint -- --fix",
     "test": "npm run build && npm run test:coverage",
@@ -52,6 +72,5 @@
     "test:coverage": "c8 --include=dist npm run test:run && npm run test:report",
     "test:report": "c8 report --reporter=html"
   },
-  "sideEffects": false,
-  "types": "dist"
+  "sideEffects": false
 }
