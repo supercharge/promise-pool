@@ -7,7 +7,7 @@ import { PromisePoolError } from './promise-pool-error'
 import { StopThePromisePoolError } from './stop-the-promise-pool-error'
 import { ErrorHandler, ProcessHandler, OnProgressCallback, Statistics, Stoppable, UsesConcurrency, SomeIterable } from './contracts'
 
-export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, Statistics<T> {
+export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, Statistics {
   /**
    * Stores the internal properties.
    */
@@ -18,9 +18,9 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     items: SomeIterable<T>
 
     /**
-     * The list of processed items.
+     * The processed items counter.
      */
-    processedItems: T[]
+    processedItemsCounter: number
 
     /**
      * The number of concurrently running tasks.
@@ -91,7 +91,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
       stopped: false,
       concurrency: 10,
       shouldResultsCorrespond: false,
-      processedItems: [],
+      processedItemsCounter: 0,
       taskTimeout: 0
     }
 
@@ -208,17 +208,17 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   }
 
   /**
-   * Returns the list of processed items.
+   * Increment the processed items counter.
    */
-  processedItems (): T[] {
-    return this.meta.processedItems
+  incrementProcessedItemsCounter (): void {
+    this.meta.processedItemsCounter++
   }
 
   /**
    * Returns the number of processed items.
    */
   processedCount (): number {
-    return this.processedItems().length
+    return this.meta.processedItemsCounter
   }
 
   /**
@@ -453,7 +453,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
         this.removeActive(task)
       })
       .finally(() => {
-        this.processedItems().push(item)
+        this.incrementProcessedItemsCounter()
         this.runOnTaskFinishedHandlers(item)
       })
 

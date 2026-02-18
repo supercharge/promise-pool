@@ -25,7 +25,7 @@ export interface Stoppable {
   isStopped(): boolean
 }
 
-export interface Statistics<T> {
+export interface Statistics {
   /**
    * Returns the number of currently active tasks.
    *
@@ -37,11 +37,6 @@ export interface Statistics<T> {
    * Returns the number of currently active tasks.
    */
   activeTasksCount (): number
-
-  /**
-   * Returns the list of processed items.
-   */
-  processedItems (): T[]
 
   /**
    * Returns the number of processed items.
@@ -58,6 +53,6 @@ export type ErrorHandler<T> = (error: Error, item: T, pool: Stoppable & UsesConc
 
 export type ProcessHandler<T, R> = (item: T, index: number, pool: Stoppable & UsesConcurrency) => Promise<R> | R
 
-export type OnProgressCallback<T> = (item: T, pool: Stoppable & Statistics<T> & UsesConcurrency) => void
+export type OnProgressCallback<T> = (item: T, pool: Stoppable & Statistics & UsesConcurrency) => void
 
 export type SomeIterable<T> = T[] | Iterable<T> | AsyncIterable<T>

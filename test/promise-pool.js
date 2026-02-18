@@ -503,7 +503,7 @@ test('onTaskFinished is called when a task was processed', async () => {
     .for(ids)
     .onTaskFinished((item, pool) => {
       finishedIds.push(item)
-      expect(finishedIds).toEqual(pool.processedItems())
+      expect(finishedIds.length).toEqual(pool.processedCount())
       expect(pool.activeTaskCount()).toBeLessThanOrEqual(concurrency)
       expect(pool.processedPercentage()).toEqual(percentageArr.shift())
     })
