@@ -44,6 +44,11 @@ export interface Statistics<T> {
   processedItems (): T[]
 
   /**
+   * Flush the processed items.
+   */
+  flushProcessedItems (): void
+
+  /**
    * Returns the number of processed items.
    */
   processedCount (): number
