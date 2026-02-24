@@ -514,6 +514,40 @@ test('onTaskFinished is called when a task was processed', async () => {
   expect(ids).toEqual(finishedIds)
 })
 
+test('dontStoreProcessedItems prevents storing processed items in memory', async () => {
+  const ids = Array.from({ length: 30 }, (_, i) => i + 1)
+  const concurrency = 3
+
+  await PromisePool
+    .withConcurrency(concurrency)
+    .for(ids)
+    .dontStoreProcessedItems()
+    .onTaskFinished((_, pool) => {
+      expect(pool.processedItems().length).toEqual(0)
+    })
+    .process(async () => {
+      return await Promise.resolve()
+    })
+})
+
+test('processedCount works properly when dontStoreProcessedItems is used', async () => {
+  const ids = Array.from({ length: 100 }, (_, i) => i + 1)
+  const concurrency = 10
+  let counter = 0
+
+  await PromisePool
+    .withConcurrency(concurrency)
+    .for(ids)
+    .dontStoreProcessedItems()
+    .onTaskFinished((_, pool) => {
+      counter++
+      expect(pool.processedCount()).toEqual(counter)
+    })
+    .process(async () => {
+      return await Promise.resolve()
+    })
+})
+
 test('onTaskStarted and onTaskFinished are called in the same amount', async () => {
   const ids = [1, 2, 3, 4, 5]
   const concurrency = 3
