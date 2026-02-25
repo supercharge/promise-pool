@@ -23,6 +23,11 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     processedItems: T[]
 
     /**
+     * The processed items counter
+     */
+    processedItemsCounter: number
+
+    /**
      * The number of concurrently running tasks.
      */
     concurrency: number
@@ -97,6 +102,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
       concurrency: 10,
       shouldResultsCorrespond: false,
       processedItems: [],
+      processedItemsCounter: 0,
       taskTimeout: 0,
       shouldStoreProcessedItems: true
     }
@@ -236,10 +242,17 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   }
 
   /**
+   * Increment the processed items counter.
+   */
+  private incrementProcessedItemsCounter (): void {
+    this.meta.processedItemsCounter += 1
+  }
+
+  /**
    * Returns the number of processed items.
    */
   processedCount (): number {
-    return this.processedItems().length
+    return this.meta.processedItemsCounter
   }
 
   /**
@@ -477,6 +490,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
         if (this.shouldStoreProcessedItems()) {
           this.processedItems().push(item)
         }
+        this.incrementProcessedItemsCounter()
         this.runOnTaskFinishedHandlers(item)
       })
 
