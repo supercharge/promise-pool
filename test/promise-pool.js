@@ -573,25 +573,25 @@ test('onTaskStarted and onTaskFinished are called in the same amount', async () 
 
 test('can decrease the concurrency while the pool is running', async () => {
   const concurrency = 3
-  const timeouts = [10, 20, 30, 40, 50]
+  const timeouts = [100, 100, 100, 100, 100, 100, 100, 100]
+  const expectedNumParallelProcessesPerLoop = [1, 2, 3, 3, 3, 1, 1, 1]
+  const measuredNumParallelProcessesPerLoop = []
 
-  const start = Date.now()
-
+  let numInProgress = 0
   await PromisePool
     .withConcurrency(concurrency)
     .for(timeouts)
-    .process(async (timeout, _, pool) => {
-      if (timeout >= 30) {
+    .process(async (timeout, i, pool) => {
+      numInProgress++
+      measuredNumParallelProcessesPerLoop[i] = numInProgress
+      if (i === 4) {
         pool.useConcurrency(1)
       }
-
       await pause(timeout)
+      numInProgress--
     })
 
-  const elapsed = Date.now() - start
-
-  expect(elapsed).toBeGreaterThanOrEqual(30 + 40 + 50)
-  expect(elapsed).toBeLessThanOrEqual(30 + 40 + 50 + 8) // +8 is a leeway for the pool overhead
+  expect(expectedNumParallelProcessesPerLoop).toEqual(measuredNumParallelProcessesPerLoop)
 })
 
 test('can increase the concurrency while the pool is running', async () => {
