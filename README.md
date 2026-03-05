@@ -172,6 +172,9 @@ await PromisePool
   })
   .onTaskFinished((item, pool) => {
     // update a progress bar or something else :)
+
+    // You can flush processed items to free up memory
+    pool.flushProcessedItems()
   })
   .process(async (user, index, pool) => {
     // processes the `user` data

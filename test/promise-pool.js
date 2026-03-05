@@ -514,6 +514,22 @@ test('onTaskFinished is called when a task was processed', async () => {
   expect(ids).toEqual(finishedIds)
 })
 
+test('flushProcessedItems flushes the processed items', async () => {
+  const items = new Array(100).fill('foo')
+  const concurrency = 10
+
+  await PromisePool
+    .withConcurrency(concurrency)
+    .for(items)
+    .onTaskFinished((item, pool) => {
+      expect(pool.processedItems().includes(item)).toBe(true)
+      pool.flushProcessedItems()
+    })
+    .process(async () => {
+      return await Promise.resolve()
+    })
+})
+
 test('dontStoreProcessedItems prevents storing processed items in memory', async () => {
   const ids = Array.from({ length: 30 }, (_, i) => i + 1)
   const concurrency = 3
@@ -524,6 +540,24 @@ test('dontStoreProcessedItems prevents storing processed items in memory', async
     .dontStoreProcessedItems()
     .onTaskFinished((_, pool) => {
       expect(pool.processedItems().length).toEqual(0)
+    })
+    .process(async () => {
+      return await Promise.resolve()
+    })
+})
+
+test('flushProcessedItems doesn\'t reset the processed items counter', async () => {
+  const items = new Array(100).fill('foo')
+  const concurrency = 10
+  let i = 0
+
+  await PromisePool
+    .withConcurrency(concurrency)
+    .for(items)
+    .onTaskFinished((_, pool) => {
+      i++
+      pool.flushProcessedItems()
+      expect(pool.processedCount()).toEqual(i)
     })
     .process(async () => {
       return await Promise.resolve()

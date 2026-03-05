@@ -242,6 +242,13 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   }
 
   /**
+   * Flush the processed items.
+   */
+  flushProcessedItems (): void {
+    this.meta.processedItems = []
+  }
+
+  /**
    * Increment the processed items counter.
    */
   private incrementProcessedItemsCounter (): void {
