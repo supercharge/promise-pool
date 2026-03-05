@@ -12,6 +12,15 @@
         // processing …
       })
   ```
+- add `flushProcessedItems` method to the promise pool executor
+  ```js
+    await PromisePool
+      .for([1,2,3,4])
+      .dontStoreProcessedItems()
+      .process(async (num, index, pool) => {
+        pool.flushProcessedItems()
+      })
+  ```
 
 
 ## [3.2.0](https://github.com/supercharge/promise-pool/compare/v3.1.1...v3.2.0) - 2024-03-25
