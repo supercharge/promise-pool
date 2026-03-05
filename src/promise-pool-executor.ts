@@ -39,6 +39,11 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     shouldResultsCorrespond: boolean
 
     /**
+     * Determine whether to store the processed items in memory.
+     */
+    shouldStoreProcessedItems: boolean
+
+    /**
      * The maximum timeout in milliseconds for the item handler, or `undefined` to disable.
      */
     taskTimeout: number | undefined
@@ -98,7 +103,8 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
       shouldResultsCorrespond: false,
       processedItems: [],
       processedItemsCounter: 0,
-      taskTimeout: 0
+      taskTimeout: 0,
+      shouldStoreProcessedItems: true
     }
 
     this.handler = (item) => item as any
@@ -118,6 +124,21 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
     this.meta.concurrency = concurrency
 
     return this
+  }
+
+  /**
+   * Set whether to store the processed items in memory.
+   */
+  storeProcessedItems (shouldStoreProcessedItems: boolean = true): this {
+    this.meta.shouldStoreProcessedItems = shouldStoreProcessedItems
+    return this
+  }
+
+  /**
+   * Determine whether to store the processed items in memory.
+   */
+  private shouldStoreProcessedItems (): boolean {
+    return this.meta.shouldStoreProcessedItems
   }
 
   /**
@@ -473,7 +494,9 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
         this.removeActive(task)
       })
       .finally(() => {
-        this.processedItems().push(item)
+        if (this.shouldStoreProcessedItems()) {
+          this.processedItems().push(item)
+        }
         this.incrementProcessedItemsCounter()
         this.runOnTaskFinishedHandlers(item)
       })

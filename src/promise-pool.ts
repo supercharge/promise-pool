@@ -23,6 +23,11 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
   private shouldResultsCorrespond: boolean
 
   /**
+   * Determine whether to store the processed items in memory.
+   */
+  private shouldStoreProcessedItems: boolean = true
+
+  /**
    * The maximum timeout in milliseconds for the item handler, or `undefined` to disable.
    */
   private timeout: number | undefined
@@ -131,6 +136,14 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
   }
 
   /**
+   * Prevent PromisePool from storing the processed items in memory.
+   */
+  dontStoreProcessedItems (): PromisePool<T> {
+    this.shouldStoreProcessedItems = false
+    return this
+  }
+
+  /**
    * Assign the given callback `handler` function to run when a task finished.
    */
   onTaskFinished (handler: OnProgressCallback<T>): PromisePool<T> {
@@ -158,6 +171,7 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
     return new PromisePoolExecutor<T, ResultType>()
       .useConcurrency(this.concurrency)
       .useCorrespondingResults(this.shouldResultsCorrespond)
+      .storeProcessedItems(this.shouldStoreProcessedItems)
       .withTaskTimeout(this.timeout)
       .withHandler(callback)
       .handleError(this.errorHandler)
