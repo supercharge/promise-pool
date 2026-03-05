@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.3.0](https://github.com/supercharge/promise-pool/compare/v3.2.0...v3.3.0) - 2026-03-05
+
+### Added
+- add `dontStoreProcessedItems` method to the promise pool to tell the processor to skip storing processed items in memory
+  ```js
+    await PromisePool
+      .for([1,2,3,4])
+      .dontStoreProcessedItems()
+      .process(async (num, index) => {
+        // processing …
+      })
+  ```
+
+
 ## [3.2.0](https://github.com/supercharge/promise-pool/compare/v3.1.1...v3.2.0) - 2024-03-25
 
 ### Added
@@ -7,8 +21,6 @@
 
 ### Updated
 - updated types for the handler function in the promise pool processor
-
-### Updated
 - bump dependencies
 
 
