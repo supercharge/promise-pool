@@ -171,7 +171,7 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
     return new PromisePoolExecutor<T, ResultType>()
       .useConcurrency(this.concurrency)
       .useCorrespondingResults(this.shouldResultsCorrespond)
-      .setShouldStoreProcessedItems(this.shouldStoreProcessedItems)
+      .storeProcessedItems(this.shouldStoreProcessedItems)
       .withTaskTimeout(this.timeout)
       .withHandler(callback)
       .handleError(this.errorHandler)

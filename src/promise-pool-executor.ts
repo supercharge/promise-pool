@@ -129,7 +129,7 @@ export class PromisePoolExecutor<T, R> implements UsesConcurrency, Stoppable, St
   /**
    * Set whether to store the processed items in memory.
    */
-  setShouldStoreProcessedItems (shouldStoreProcessedItems: boolean): this {
+  storeProcessedItems (shouldStoreProcessedItems: boolean = true): this {
     this.meta.shouldStoreProcessedItems = shouldStoreProcessedItems
     return this
   }
