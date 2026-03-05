@@ -3,7 +3,7 @@
 ## [3.3.0](https://github.com/supercharge/promise-pool/compare/v3.2.0...v3.3.0) - 2026-03-05
 
 ### Added
-- add `dontStoreProcessedItems` method to the promise pool to tell the processor to skip storing processed items in memory
+- add `dontStoreProcessedItems` method to the promise pool to tell the processor to skip storing processed items in memory (Thank you Christopher Zinger! [PR 92](https://github.com/supercharge/promise-pool/pull/92))
   ```js
     await PromisePool
       .for([1,2,3,4])
@@ -12,7 +12,7 @@
         // processing …
       })
   ```
-- add `flushProcessedItems` method to the promise pool executor
+- add `flushProcessedItems` method to the promise pool executor (Thank you Christopher Zinger! [PR 91](https://github.com/supercharge/promise-pool/pull/91))
   ```js
     await PromisePool
       .for([1,2,3,4])
