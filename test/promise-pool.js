@@ -524,6 +524,7 @@ test('flushProcessedItems flushes the processed items', async () => {
     .onTaskFinished((item, pool) => {
       expect(pool.processedItems().includes(item)).toBe(true)
       pool.flushProcessedItems()
+    })
     .process(async () => {
       return await Promise.resolve()
     })
@@ -562,7 +563,7 @@ test('flushProcessedItems doesn\'t reset the processed items counter', async () 
       return await Promise.resolve()
     })
 })
-  
+
 test('processedCount works properly when dontStoreProcessedItems is used', async () => {
   const ids = Array.from({ length: 100 }, (_, i) => i + 1)
   const concurrency = 10
