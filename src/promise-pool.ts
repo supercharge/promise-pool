@@ -100,6 +100,7 @@ export class PromisePool<T, ShouldUseCorrespondingResults extends boolean = fals
    */
   for<ItemType> (items: SomeIterable<ItemType>): PromisePool<ItemType> {
     const pool = new PromisePool<ItemType>(items).withConcurrency(this.concurrency)
+    pool.shouldStoreProcessedItems = this.shouldStoreProcessedItems
 
     if (typeof this.errorHandler === 'function') {
       pool.handleError(this.errorHandler as unknown as ErrorHandler<ItemType>)

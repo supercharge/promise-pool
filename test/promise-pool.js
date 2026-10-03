@@ -546,6 +546,74 @@ test('dontStoreProcessedItems prevents storing processed items in memory', async
     })
 })
 
+test('dontStoreProcessedItems works before for with arrays', async () => {
+  const progress = []
+
+  const { results, errors } = await PromisePool
+    .withConcurrency(1)
+    .dontStoreProcessedItems()
+    .for([1, 2, 3])
+    .onTaskFinished((_, pool) => {
+      progress.push([pool.processedItems().slice(), pool.processedCount(), Math.round(pool.processedPercentage())])
+    })
+    .process(item => item * 2)
+
+  expect(results).toEqual([2, 4, 6])
+  expect(errors).toEqual([])
+  expect(progress).toEqual([
+    [[], 1, 33],
+    [[], 2, 67],
+    [[], 3, 100]
+  ])
+})
+
+test('dontStoreProcessedItems works before for with async iterables', async () => {
+  async function * items () {
+    yield 1
+    yield 2
+    yield 3
+  }
+
+  const progress = []
+  const { results, errors } = await PromisePool
+    .withConcurrency(1)
+    .dontStoreProcessedItems()
+    .for(items())
+    .onTaskFinished((_, pool) => {
+      progress.push([pool.processedItems().slice(), pool.processedCount()])
+    })
+    .process(item => {
+      if (item === 2) {
+        throw new Error('cannot process item')
+      }
+
+      return item * 2
+    })
+
+  expect(results).toEqual([2, 6])
+  expect(errors.map(error => error.item)).toEqual([2])
+  expect(progress).toEqual([[[], 1], [[], 2], [[], 3]])
+})
+
+test('dontStoreProcessedItems survives replacing source items', async () => {
+  const pool = PromisePool.for([1]).dontStoreProcessedItems()
+
+  for (const items of [[2, 3], [4, 5]]) {
+    const storedItems = []
+    const { results, errors } = await pool
+      .for([])
+      .for(items)
+      .onTaskFinished((_, executor) => {
+        storedItems.push(executor.processedItems().slice())
+      })
+      .process(item => item * 2)
+
+    expect(results).toEqual(items.map(item => item * 2))
+    expect(errors).toEqual([])
+    expect(storedItems).toEqual([[], []])
+  }
+})
+
 test('flushProcessedItems doesn\'t reset the processed items counter', async () => {
   const items = new Array(100).fill('foo')
   const concurrency = 10
